@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>口湖水鳥調查 v1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#eef2f7;--card:#fff;--card2:#f8fafc;--border:#dde3ed;--border2:#c8d1e0;
+  --text:#1c2b3a;--dim:#6b7f96;--label:#3d5166;
+  --green:#1a7a5e;--green-lt:#e8f7f3;--green-md:#b8e8da;
+  --amber:#b85c00;--amber-lt:#fff4e6;--amber-md:#ffd8a8;
+  --blue:#1a56a0;--blue-lt:#e8f0fd;--blue-md:#b8d0f5;
+  --red:#c0392b;--red-lt:#fdecea;--purple:#7c3aed;--purple-lt:#f5f3ff;
+  --r:10px;--r2:14px;
+  --sh:0 1px 3px rgba(28,43,58,.07),0 1px 2px rgba(28,43,58,.04);
+  --sh2:0 4px 16px rgba(28,43,58,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:72px}
+
+/* ── Header ── */
+.hdr{position:sticky;top:0;z-index:80;background:var(--card);border-bottom:1px solid var(--border);box-shadow:var(--sh2)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-icon{font-size:22px}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.brand-sub{font-size:10px;color:var(--dim);margin-top:1px;font-family:'DM Mono',monospace}
+.hdr-now{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 9px}
+.tabs{display:flex;border-top:1px solid var(--border)}
+.tab{flex:1;padding:8px 4px;text-align:center;font-size:11.5px;font-weight:700;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;color:var(--dim);transition:all .15s;white-space:nowrap;font-family:'Noto Sans TC',sans-serif}
+.tab.ab{color:var(--green);border-bottom-color:var(--green);background:var(--green-lt)}
+.tab.as{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-lt)}
+
+/* ── Session Bar ── */
+.sbar{background:var(--card);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;flex-direction:column;gap:7px}
+.sl{font-size:11px;font-weight:700;color:var(--label);display:block;margin-bottom:2px}
+.srow{display:flex;gap:7px;align-items:flex-end}
+.time-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+select,input[type=text],input[type=number],input[type=time],textarea{
+  background:var(--card2);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-size:14px;padding:9px 11px;font-family:'Noto Sans TC',sans-serif;
+  -webkit-appearance:none;width:100%;transition:border-color .15s,box-shadow .15s}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px var(--green-md)}
+textarea{resize:vertical;min-height:56px}
+input[type=time]{font-family:'DM Mono',monospace;font-size:15px}
+.btn-sm{padding:9px 13px;border-radius:var(--r);background:var(--card2);border:1px solid var(--border2);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;flex-shrink:0}
+.btn-sm:active{background:var(--green-lt);color:var(--green);border-color:var(--green)}
+
+/* ── Panel ── */
+.panel{display:none;padding:12px 16px}
+.panel.on{display:block}
+
+/* ── Section header ── */
+.sh{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.sh:first-child{margin-top:0}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.b{background:var(--green)}.dot.g{background:var(--blue)}.dot.p{background:var(--purple)}
+
+/* ── 即時打點地圖 ── */
+.pin-map-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.pin-map-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card2);border-bottom:1px solid var(--border)}
+.pin-map-icon{font-size:20px}
+.pin-map-title{font-size:13px;font-weight:700;color:var(--label);flex:1}
+.pin-map-status{font-size:11px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;font-weight:600;background:var(--card2);color:var(--dim);border:1px solid var(--border)}
+.pin-map-status.watching{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.pin-map-status.active{background:var(--green-lt);color:var(--green);border-color:var(--green-md)}
+.pin-map-controls{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border)}
+.pin-map-hint{font-size:11px;color:var(--dim);line-height:1.6}
+
+/* 大型打點按鈕 */
+.btn-pin-gps{width:100%;padding:16px;border-radius:var(--r);border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:var(--sh2);transition:all .15s;letter-spacing:.03em}
+.btn-pin-gps:active{background:#5b21b6}
+.btn-pin-gps.locating{background:#a78bfa;cursor:wait}
+.btn-pin-gps.watching{background:#059669}
+.btn-watch-stop{width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--red);background:var(--red-lt);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-top:6px;display:none}
+.btn-watch-stop.on{display:block}
+
+/* 目前點位資訊卡 */
+.pin-info-card{margin:0 14px 14px;background:var(--purple-lt);border:1.5px solid #c4b5fd;border-radius:var(--r);padding:10px 12px;display:none}
+.pin-info-card.on{display:block}
+.pin-info-line{font-size:12px;line-height:1.9}
+.pin-info-line strong{color:var(--purple);font-family:'DM Mono',monospace}
+.pin-info-coord{font-size:10.5px;font-family:'DM Mono',monospace;color:var(--dim);margin-top:2px}
+
+/* 樣線選擇器（手動模式） */
+.line-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.lbtn{padding:6px 11px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--dim);font-family:'DM Mono',monospace;transition:all .12s}
+.lbtn.active{border-color:var(--purple);color:var(--purple);background:var(--purple-lt)}
+.lbtn.nearest{box-shadow:0 0 0 2px #c4b5fd}
+
+#bSurveyMap{width:100%;height:340px;display:block}
+
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.ch{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:700;color:var(--label);display:flex;align-items:center;gap:7px}
+.cb{padding:13px 14px;display:flex;flex-direction:column;gap:11px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:11.5px;font-weight:700;color:var(--label);display:flex;align-items:center;gap:6px}
+.req{color:var(--red);margin-left:2px}
+
+/* ── Species ── */
+.sp-combo{position:relative}
+.sp-combo input[type=text]{padding-right:36px}
+.sp-combo-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:13px;pointer-events:none}
+.sp-datalist-wrap{display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh2);max-height:220px;overflow-y:auto}
+.sp-datalist-wrap.on{display:block}
+.sp-opt{padding:9px 13px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}
+.sp-opt:last-child{border-bottom:none}
+.sp-opt:active,.sp-opt:hover{background:var(--green-lt);color:var(--green)}
+.sp-opt-group{padding:5px 13px 3px;font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;background:var(--card2);border-bottom:1px solid var(--border)}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:6px 11px;border-radius:20px;font-size:12px;cursor:pointer;border:1.5px solid var(--border);background:var(--card2);color:var(--dim);transition:all .12s;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;font-weight:500;line-height:1.3;-webkit-user-select:none;user-select:none}
+.chip:active{transform:scale(.95)}
+.chip.sb{border-color:var(--green);color:var(--green);background:var(--green-lt);font-weight:700}
+.cinp{font-family:'DM Mono',monospace;font-size:12.5px;color:var(--dim);background:var(--card);border:1px dashed var(--border2);margin-top:1px;padding:7px 11px;border-radius:var(--r);width:100%}
+
+/* ── Count ── */
+.crow{display:flex;gap:7px;align-items:center}
+.cbtn{width:44px;height:44px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--sh);transition:all .1s}
+.cbtn:active{border-color:var(--green);color:var(--green);background:var(--green-lt)}
+.cbtn.sm{font-size:12px;width:46px;font-weight:700;font-family:'DM Mono',monospace}
+.cinput{text-align:center;font-weight:700;font-family:'DM Mono',monospace;font-size:18px}
+
+/* ── Sort bar ── */
+.sort-bar{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.sbtn{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--dim);font-family:'Noto Sans TC',sans-serif;transition:all .12s}
+.sbtn.active.b{border-color:var(--green);color:var(--green);background:var(--green-lt)}
+
+/* ── Add button ── */
+.badd{width:100%;padding:14px;border-radius:var(--r);border:none;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;font-family:'Noto Sans TC',sans-serif;box-shadow:var(--sh2);transition:all .15s}
+.badd-b{background:var(--green);color:#fff}.badd-b:active{background:#0f5440}
+
+/* ── Record list ── */
+.rlist{display:flex;flex-direction:column;gap:6px}
+.ri{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;display:flex;align-items:flex-start;gap:7px;box-shadow:var(--sh)}
+.ri.rb{border-left:3px solid var(--green)}
+.ri.rp{border-left:3px solid var(--purple)}
+.rpill{display:inline-flex;align-items:center;border-radius:5px;font-size:10px;font-weight:700;padding:2px 6px;font-family:'DM Mono',monospace;flex-shrink:0;margin-top:2px}
+.rpill.b{background:var(--green-lt);color:var(--green)}
+.rpill.p{background:var(--purple-lt);color:var(--purple)}
+.rinfo{flex:1;min-width:0}
+.rm{font-size:13px;font-weight:600;margin-bottom:2px;line-height:1.3}
+.rs{font-size:10.5px;color:var(--dim);font-family:'DM Mono',monospace;line-height:1.6}
+.r-actions{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.redit,.rdel{color:var(--dim);padding:3px 6px;cursor:pointer;background:none;border:none;font-size:15px}
+.redit:active{color:var(--blue)}.rdel:active{color:var(--red)}
+.empty{text-align:center;color:var(--dim);padding:26px 16px;font-size:13px}
+.empty-i{font-size:30px;margin-bottom:7px}
+
+/* ── Stats ── */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh)}
+.sn{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;line-height:1}
+.sn.b{color:var(--green)}.sn.g{color:var(--blue)}.sn.p{color:var(--purple)}.sn.a{color:var(--amber)}
+.sl2{font-size:9.5px;color:var(--dim);margin-top:4px;font-weight:700}
+
+/* ── Map panel (overview) ── */
+.map-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.map-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card2);border-bottom:1px solid var(--border)}
+.map-head-icon{font-size:20px}
+.map-head-title{font-size:13px;font-weight:700;color:var(--label);flex:1}
+.map-controls{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border)}
+.survey-map{width:100%;height:340px;display:block}
+.map-my-loc-btn{padding:8px 14px;border-radius:var(--r);background:var(--blue);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;display:flex;align-items:center;gap:6px}
+.map-my-loc-btn:active{background:#1241a0}
+
+/* ── Progress: 樣線列表 ── */
+.progress-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.progress-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card2);border-bottom:1px solid var(--border)}
+.progress-head-title{font-size:13px;font-weight:700;color:var(--label);flex:1}
+.progress-all-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+.progress-all-badge.done{background:#e6f4ea;color:#1e7e34}
+.progress-all-badge.wip{background:var(--amber-lt);color:var(--amber)}
+.progress-all-badge.none{background:var(--card2);color:var(--dim);border:1px solid var(--border)}
+.lp-body{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.lp-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.lp-name{font-family:'DM Mono',monospace;font-weight:700;color:var(--purple);width:32px;flex-shrink:0}
+.lp-bar-track{flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.lp-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.lp-count{font-size:10px;font-family:'DM Mono',monospace;color:var(--dim);width:46px;text-align:right;flex-shrink:0;white-space:nowrap}
+
+/* ── Google Sheets Sync ── */
+.gsync-banner{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.gsync-banner.linked{border-color:#34a853}
+.gsync-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card2);border-bottom:1px solid var(--border);cursor:pointer;-webkit-user-select:none;user-select:none}
+.gsync-head .gicon{font-size:20px}
+.gsync-head .gtitle{font-size:13px;font-weight:700;color:var(--label);flex:1}
+.gstatus{font-size:11px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;font-weight:600}
+.gstatus.ok{background:#e6f4ea;color:#1e7e34}.gstatus.no{background:var(--card2);color:var(--dim);border:1px solid var(--border)}
+.gsync-body{padding:13px 14px;display:flex;flex-direction:column;gap:10px}
+.gsync-url-row{display:flex;gap:7px;align-items:flex-end}
+.gsync-url-row input{flex:1;font-size:12px;font-family:'DM Mono',monospace}
+.gbtn{padding:10px 14px;border-radius:var(--r);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap}
+.gbtn-link{background:#1a73e8;color:#fff}.gbtn-unlink{background:var(--red-lt);color:var(--red);border:1px solid #f5a9a9}
+.gbtn-sync{width:100%;background:#34a853;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;font-size:14px;border-radius:var(--r)}
+.gbtn-sync:disabled{background:#b8d9c0;cursor:not-allowed}
+.sync-hint{font-size:11px;color:var(--dim);line-height:1.7}
+.sync-prog{display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r);background:var(--blue-lt);border:1px solid var(--blue-md);font-size:12px;font-weight:600;color:var(--blue)}
+.sync-prog.on{display:flex}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-log{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--dim);background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-height:80px;overflow-y:auto;display:none;line-height:1.8}
+.sync-log.on{display:block}
+
+/* ── Export ── */
+.egrid{display:flex;flex-direction:column;gap:7px}
+.bexp{padding:13px 15px;border-radius:var(--r);background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans TC',sans-serif;text-align:left;box-shadow:var(--sh);display:flex;align-items:center;gap:11px}
+.bexp:active{border-color:var(--green);color:var(--green);background:var(--green-lt)}
+.bexp.danger:active{border-color:var(--red);color:var(--red);background:var(--red-lt)}
+.bexp-icon{font-size:17px}
+.bexp-sub{font-size:11px;color:var(--dim);font-weight:400;margin-top:1px}
+
+/* ── Copy modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end}
+.modal-overlay.on{display:flex}
+.modal{background:var(--card);border-radius:16px 16px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:16px;border-top:1px solid var(--border)}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.modal-title{font-size:15px;font-weight:700;color:var(--label);margin-bottom:12px}
+.copy-area{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text);white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow-y:auto;margin-bottom:10px;line-height:1.8}
+.btn-copy{width:100%;padding:13px;border-radius:var(--r);background:var(--green);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px}
+.btn-copy:active{background:#0f5440}
+.btn-modal-close{width:100%;padding:11px;border-radius:var(--r);background:var(--card2);color:var(--dim);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
+
+/* ── Edit overlay ── */
+.edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:120;align-items:flex-end}
+.edit-overlay.on{display:flex}
+.edit-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:0 0 40px;border-top:1px solid var(--border);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.info-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+.edit-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card);z-index:1}
+.edit-title{font-size:15px;font-weight:700;color:var(--label);flex:1}
+.edit-close{width:32px;height:32px;border-radius:50%;background:var(--card2);border:1px solid var(--border);color:var(--dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.edit-body{padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+.btn-save{width:100%;padding:14px;border-radius:var(--r);border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;background:var(--green);color:#fff;margin-top:4px}
+.btn-save:active{background:#0f5440}
+
+/* ── Legend ── */
+.legend{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.legend summary{font-size:12px;font-weight:700;color:var(--label);cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:7px;-webkit-user-select:none;user-select:none}
+.legend summary::-webkit-details-marker{display:none}
+.legend[open] summary{border-bottom:1px solid var(--border);background:var(--card2)}
+.lbody{padding:10px 14px;font-size:11px;color:var(--dim);line-height:1.9}
+.lbody strong{color:var(--label)}
+.lbody code{font-family:'DM Mono',monospace;font-size:10.5px;background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--green)}
+
+/* ── Nav ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--card);border-top:1px solid var(--border);box-shadow:0 -2px 12px rgba(28,43,58,.08);display:flex;z-index:80}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;background:none;border:none;color:var(--dim);font-size:10px;font-weight:700;font-family:'Noto Sans TC',sans-serif}
+.nb .ni{font-size:20px;line-height:1}
+.nb.ab{color:var(--green)}.nb.as{color:var(--blue)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;z-index:200;opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap;box-shadow:var(--sh2)}
+.toast.on{opacity:1}
+.toast.ok{background:var(--green);color:#fff}.toast.warn{background:var(--amber);color:#fff}.toast.err{background:var(--red);color:#fff}.toast.info{background:var(--purple);color:#fff}
+
+hr{border:none;border-top:1px solid var(--border);margin:13px 0}
+
+/* 連續追蹤 badge */
+.watch-badge{display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;padding:3px 9px;font-family:'DM Mono',monospace}
+.watch-dot{width:7px;height:7px;border-radius:50%;background:#f59e0b;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── 即時定位按鈕 ── */
+.btn-locate{padding:11px 18px;border-radius:var(--r);border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;background:var(--blue);color:#fff;display:flex;align-items:center;gap:8px;box-shadow:var(--sh2);transition:all .15s}
+.btn-locate:active{background:#1241a0}
+.btn-locate.locating{background:#78a7d4;cursor:wait}
+.btn-locate.tracking{background:#059669}
+.btn-locate-stop{padding:11px 14px;border-radius:var(--r);background:var(--red-lt);color:var(--red);border:1.5px solid #f5a9a9;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
+
+/* ── 打點列表 ── */
+.pt-list-toggle{width:100%;padding:9px 14px;background:var(--card2);border:none;border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--label);text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pt-list-toggle:active{background:var(--purple-lt)}
+.pt-list{flex-direction:column;gap:5px;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);max-height:240px;overflow-y:auto}
+.pt-item{display:flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:7px 10px}
+.pt-item.pending{border-color:var(--purple);background:var(--purple-lt)}
+.pt-num{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--purple);width:28px;flex-shrink:0}
+.pt-line{font-size:12px;font-weight:600;color:var(--label)}
+.pt-coord{font-size:10px;font-family:'DM Mono',monospace;color:var(--dim);margin-top:1px}
+.pt-set-pending{padding:4px 9px;border-radius:6px;background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-md);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;flex-shrink:0}
+.pt-del{width:26px;height:26px;border-radius:50%;background:var(--red-lt);color:var(--red);border:1px solid #f5a9a9;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── 打點列表管理 ── */
+.pt-list{display:flex;flex-direction:column;gap:5px;margin:0 14px 12px}
+.pt-item{display:flex;align-items:center;gap:7px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:11.5px}
+.pt-item.pending{border-color:#c4b5fd;background:var(--purple-lt)}
+.pt-num{font-family:'DM Mono',monospace;font-weight:700;color:var(--purple);width:28px;flex-shrink:0}
+.pt-line{font-family:'DM Mono',monospace;font-size:11px;color:var(--label);flex:1}
+.pt-coord{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim)}
+.pt-drag-hint{font-size:10px;color:var(--blue);margin-left:2px}
+.pt-del{width:26px;height:26px;border-radius:6px;border:none;background:var(--red-lt);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.pt-del:active{background:var(--red);color:#fff}
+.pt-set-pending{padding:3px 8px;border-radius:6px;border:1px solid #c4b5fd;background:var(--purple-lt);color:var(--purple);font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.pt-set-pending:active{background:var(--purple);color:#fff}
+.pt-list-toggle{font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;padding:5px 14px;display:flex;align-items:center;gap:5px;background:none;border:none;font-family:'Noto Sans TC',sans-serif}
+/* Leaflet 拖曳游標 */
+.leaflet-dragging .leaflet-grab{cursor:grabbing!important}
+</style>
+</head>
+<body>
+
+<!-- ══ Header ══ -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <span class="brand-icon">🦅</span>
+      <div>
+        <div class="brand-name">口湖水鳥調查</div>
+        <div class="brand-sub">即時打點版 v1 · 夸克口湖</div>
+      </div>
+    </div>
+    <div class="hdr-now" id="hdrNow"></div>
+  </div>
+  <div class="tabs">
+    <button class="tab ab" onclick="goTab('b')" id="tab-b">🦅 鳥種紀錄</button>
+    <button class="tab" onclick="goTab('s')" id="tab-s">📋 總覽匯出</button>
+  </div>
+</div>
+
+<!-- ══ Session Bar ══ -->
+<div class="sbar">
+  <div class="srow">
+    <div style="flex:1">
+      <label class="sl">調查日期</label>
+      <div style="display:flex;gap:7px">
+        <select id="selDate" style="flex:1"></select>
+        <button class="btn-sm" onclick="setToday()">今天</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+    <div><label class="sl">案場編號</label><input type="text" id="sessCase" placeholder="例如：夸克口湖"></div>
+    <div><label class="sl">調查者（逗號分隔）</label><input type="text" id="sessObs" placeholder="輸入姓名"></div>
+  </div>
+  <div class="time-row">
+    <div><label class="sl">開始時間</label><input type="time" id="sessStart"></div>
+    <div><label class="sl">結束時間</label><input type="time" id="sessEnd"></div>
+    <div><label class="sl">滿潮時間</label><input type="time" id="sessTide"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PANEL B — 鳥種紀錄（即時打點）
+══════════════════════════════ -->
+<div class="panel on" id="panel-b">
+
+  <details class="legend">
+    <summary>📖 行為與微棲地代碼說明</summary>
+    <div class="lbody">
+      <strong>行為：</strong><code>F</code>覓食 <code>R</code>棲息 <code>B</code>繁殖 <code>A</code>飛過 <code>U</code>未知 <code>O</code>其他<br><br>
+      <strong>微棲地：</strong>
+      <code>FB</code>魚塭堤岸 <code>WS</code>水域表層 <code>WF</code>淺水與水域邊緣 <code>SD</code>裸土 <code>SW</code>溼土 <code>SE</code>外來土堆 <code>PU</code>積水或水溝
+      <code>MA</code>紅樹林植物 <code>MH</code>草澤 <code>TR</code>樹 <code>TG</code>高草 <code>LG</code>短草
+      <code>AP</code>人工建物 <code>RO</code>路面 <code>TO</code>電塔 <code>CA</code>電線或電纜 <code>PO</code>電線桿 <code>FD</code>料桶或打水設備 <code>AI</code>空中 <code>PASS</code>飛過
+    </div>
+  </details>
+
+  <!-- ── 地圖與打點 ── -->
+  <div class="sh" style="margin-top:0"><span class="dot p"></span>樣線地圖與打點管理</div>
+  <div class="pin-map-panel">
+    <div class="pin-map-head">
+      <span class="pin-map-icon">🛰</span>
+      <div class="pin-map-title">衛星地圖打點</div>
+      <span class="pin-map-status" id="pinMapStatus">待機中</span>
+    </div>
+    <div class="pin-map-controls">
+      <div class="pin-map-hint">
+        在地圖上<b>點擊任意位置</b>建立打點，系統自動辨識最近樣線並產生流水號。<br>
+        按「即時定位」追蹤當前位置並<b>自動預選最近樣線</b>（不建立打點）。
+      </div>
+
+      <!-- 即時定位（顯示位置 + 預設樣線，不打點） -->
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+        <button class="btn-locate" id="btnLocate" onclick="doLocate()">
+          <span id="locBtnIcon">📡</span><span id="locBtnText">即時定位</span>
+        </button>
+        <button class="btn-locate-stop" id="btnLocateStop" onclick="stopLocate()">⏹ 停止追蹤</button>
+        <span id="locAccBadge" style="display:none;font-size:10px;font-family:'DM Mono',monospace;color:var(--blue);background:var(--blue-lt);border:1px solid var(--blue-md);border-radius:12px;padding:2px 8px"></span>
+      </div>
+
+      <!-- 樣線選擇 -->
+      <div>
+        <label class="sl" style="margin-bottom:4px">選擇樣線（定位後自動預選最近，可手動覆蓋）</label>
+        <div class="line-selector" id="lineSelectorBtns"></div>
+      </div>
+    </div>
+
+    <!-- 當前打點資訊卡 -->
+    <div class="pin-info-card" id="pinInfoCard">
+      <div class="pin-info-line">
+        <strong id="piLine">—</strong> 樣線 &nbsp;｜&nbsp; 點位流水號 <strong id="piPtNum">—</strong>
+      </div>
+      <div class="pin-info-coord" id="piCoord">—</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:2px" id="piDist"></div>
+    </div>
+
+    <!-- 打點管理列表 -->
+    <div id="ptListWrap" style="display:none">
+      <button class="pt-list-toggle" onclick="togglePtList()">
+        <span id="ptListIcon">▾</span> 打點管理
+        <span id="ptListBadge" style="font-family:'DM Mono',monospace;color:var(--dim);margin-left:4px"></span>
+        <span style="font-size:10px;color:var(--dim);margin-left:6px">無記錄的點可拖曳移位</span>
+      </button>
+      <div class="pt-list" id="ptList" style="display:none"></div>
+    </div>
+
+    <div id="bSurveyMap" style="height:340px"></div>
+  </div>
+
+  <hr>
+
+  <!-- 記錄時間 -->
+  <div class="card">
+    <div class="ch">⏱ 記錄時間</div>
+    <div class="cb">
+      <div class="f"><label>觀察時間（時:分）</label><input type="time" id="b-time" style="max-width:160px"></div>
+    </div>
+  </div>
+
+  <!-- 物種資訊 -->
+  <div class="card">
+    <div class="ch">🦅 物種資訊</div>
+    <div class="cb">
+      <div class="f">
+        <label>物種<span class="req">★</span></label>
+        <div class="sp-combo">
+          <input type="text" id="b-sp-input" placeholder="輸入或選擇物種…" autocomplete="off" oninput="filterSpecies(this.value)" onfocus="showSpeciesList()" onblur="hideSpeciesList()">
+          <span class="sp-combo-arrow">▾</span>
+          <div class="sp-datalist-wrap" id="sp-datalist"></div>
+        </div>
+      </div>
+      <div class="f"><label>備註_物種</label><input type="text" id="b-spn" placeholder="不確定種請記錄"></div>
+      <div class="f">
+        <label>數量<span class="req">★</span></label>
+        <div class="crow">
+          <button class="cbtn" onclick="adj(-1)">−</button>
+          <input class="cinput" type="number" id="b-cnt" value="1" min="1" max="9999">
+          <button class="cbtn" onclick="adj(1)">＋</button>
+          <button class="cbtn sm" onclick="adj(5)">+5</button>
+          <button class="cbtn sm" onclick="adj(10)">+10</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 行為與微棲地 -->
+  <div class="card">
+    <div class="ch">🔍 行為與微棲地</div>
+    <div class="cb">
+      <div class="f">
+        <label>行為<span class="req">★</span></label>
+        <div class="chips" id="bv-chips"></div>
+        <input class="cinp" type="text" id="bv-v" placeholder="已選行為代碼" readonly>
+      </div>
+      <div class="f"><label>備註_行為</label><input type="text" id="b-bvn" placeholder="補充說明（選填）"></div>
+      <div class="f">
+        <label>微棲地</label>
+        <div class="chips" id="bm-chips"></div>
+        <input class="cinp" type="text" id="bm-v" placeholder="已選微棲地代碼" readonly>
+      </div>
+      <div class="f"><label>備註_微棲地</label><input type="text" id="b-mhn" placeholder="補充說明（選填）"></div>
+      <div class="f"><label>備註</label><textarea id="b-note" placeholder="其他備註（選填）"></textarea></div>
+    </div>
+  </div>
+
+  <button class="badd badd-b" onclick="addB()">＋ 新增鳥種紀錄</button>
+  <hr>
+  <div class="sh"><span class="dot b"></span>已記錄鳥種 <span id="b-badge" style="color:var(--green);margin-left:4px"></span></div>
+  <div class="sort-bar">
+    <button class="sbtn active b" data-sort="b-latest" onclick="setSort('b','latest')">最新</button>
+    <button class="sbtn" data-sort="b-line" onclick="setSort('b','line')">樣線</button>
+    <button class="sbtn" data-sort="b-pt" onclick="setSort('b','pt')">點位</button>
+    <button class="sbtn" data-sort="b-time" onclick="setSort('b','time')">時間</button>
+  </div>
+  <div class="rlist" id="b-list"></div>
+</div>
+
+<!-- ══════════════════════════════
+     PANEL S — 總覽匯出
+══════════════════════════════ -->
+<div class="panel" id="panel-s">
+  <div class="sh"><span class="dot g"></span>本次統計</div>
+  <div class="sgrid">
+    <div class="sbox"><div class="sn b" id="sb-n">0</div><div class="sl2">鳥種筆數</div></div>
+    <div class="sbox"><div class="sn g" id="st-n">0</div><div class="sl2">個體總數</div></div>
+    <div class="sbox"><div class="sn p" id="sp-n">0</div><div class="sl2">打點數</div></div>
+    <div class="sbox"><div class="sn a" id="sfam-n">0</div><div class="sl2">物種數</div></div>
+  </div>
+
+  <!-- 樣線打點進度 -->
+  <div class="sh"><span class="dot g"></span>各樣線打點進度</div>
+  <div class="progress-panel">
+    <div class="progress-head">
+      <div class="progress-head-title">📋 樣線記錄狀況</div>
+      <span class="progress-all-badge none" id="progressAllBadge">—</span>
+    </div>
+    <div class="lp-body" id="progressBody"></div>
+  </div>
+
+  <!-- 調查地圖（總覽） -->
+  <div class="sh"><span class="dot g"></span>調查地圖（所有打點）</div>
+  <div class="map-panel">
+    <div class="map-head">
+      <span class="map-head-icon">🛰</span>
+      <div class="map-head-title">口湖樣線與記錄點位</div>
+    </div>
+    <div class="map-controls">
+      <button class="map-my-loc-btn" onclick="centerMyLocation('s')">📍 顯示我的位置</button>
+    </div>
+    <div id="surveyMap" class="survey-map"></div>
+  </div>
+
+  <!-- Google Sheets Sync -->
+  <div class="sh"><span class="dot g"></span>Google Sheets 同步</div>
+  <div class="gsync-banner" id="gsBanner">
+    <div class="gsync-head" onclick="toggleGsPanel()">
+      <span class="gicon">📊</span>
+      <span class="gtitle">連結 Google Sheets</span>
+      <span class="gstatus no" id="gsStatusBadge">未連結</span>
+    </div>
+    <div class="gsync-body" id="gsBody" style="display:none">
+      <div class="sync-hint">部署 Apps Script 網頁應用程式後貼入 URL，即可將資料推送至 Google Sheets。</div>
+      <div id="gs-unlinked">
+        <label class="sl" style="margin-bottom:4px">Apps Script URL</label>
+        <div class="gsync-url-row">
+          <input type="text" id="gsUrlInput" placeholder="https://script.google.com/macros/s/…/exec">
+          <button class="gbtn gbtn-link" onclick="linkSheet()">連結</button>
+        </div>
+      </div>
+      <div id="gs-linked" style="display:none">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--dim);flex:1;font-family:'DM Mono',monospace;word-break:break-all" id="gsUrlDisplay"></span>
+          <button class="gbtn gbtn-unlink" onclick="unlinkSheet()">取消連結</button>
+        </div>
+      </div>
+      <div class="sync-prog" id="syncProg"><span class="spin">⏳</span><span id="syncProgTxt">同步中…</span></div>
+      <div class="sync-log" id="syncLog"></div>
+      <button class="gbtn gbtn-sync" id="btnSync" onclick="syncAll()" disabled>☁️ 同步全部資料到 Google Sheets</button>
+    </div>
+  </div>
+
+  <!-- 下載 -->
+  <div class="sh"><span class="dot g"></span>下載與複製</div>
+  <div class="egrid">
+    <button class="bexp" onclick="expCSV()"><span class="bexp-icon">📥</span><div><div>匯出鳥種紀錄 CSV</div><div class="bexp-sub">欄位對應「BirdRaw」工作表（含 TWD97 TM2 座標）</div></div></button>
+    <button class="bexp" onclick="expPtsCSV()"><span class="bexp-icon">📍</span><div><div>匯出打點清單 CSV</div><div class="bexp-sub">所有打點的樣線、流水號、WGS84、TWD97 座標</div></div></button>
+    <button class="bexp" onclick="expKMZ()"><span class="bexp-icon">🌐</span><div><div>匯出 KMZ（Google Earth）</div><div class="bexp-sub">含樣線折線、觀測點（物種屬性）、移動軌跡</div></div></button>
+    <button class="bexp" onclick="expKML()"><span class="bexp-icon">🗺</span><div><div>匯出 KML（QGIS / ArcGIS）</div><div class="bexp-sub">純文字 KML，可直接匯入 GIS 軟體</div></div></button>
+    <button class="bexp" onclick="openCopyModal()"><span class="bexp-icon">📋</span><div><div>複製鳥種紀錄文字</div><div class="bexp-sub">格式化文字，方便貼到 LINE 或記事本</div></div></button>
+    <button class="bexp danger" onclick="clearAll()"><span class="bexp-icon">🗑</span><div><div>清除所有紀錄</div><div class="bexp-sub">請確認已匯出，此動作不可復原</div></div></button>
+  </div>
+
+  <hr>
+  <div class="sh"><span class="dot b"></span>最近 5 筆鳥種紀錄</div>
+  <div class="rlist" id="sb-list"></div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bnav">
+  <button class="nb ab" onclick="goTab('b')" id="nav-b"><span class="ni">🦅</span>鳥種紀錄</button>
+  <button class="nb" onclick="goTab('s')" id="nav-s"><span class="ni">📋</span>總覽匯出</button>
+</nav>
+
+<!-- Copy modal -->
+<div class="modal-overlay" id="copyModal" onclick="if(event.target===this)closeCopyModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">鳥種紀錄文字</div>
+    <div class="copy-area" id="copyArea"></div>
+    <button class="btn-copy" onclick="doCopy()">📋 複製到剪貼簿</button>
+    <button class="btn-modal-close" onclick="closeCopyModal()">關閉</button>
+  </div>
+</div>
+
+<!-- Edit overlay -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
+  <div class="edit-sheet">
+    <div class="info-handle"></div>
+    <div class="edit-hdr">
+      <div class="edit-title" id="editTitle">編輯紀錄</div>
+      <button class="edit-close" onclick="closeEdit()">×</button>
+    </div>
+    <div class="edit-body" id="editBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ════════════════════════════════════════════
+   KML 樣線座標（WGS84, [lat, lng]）
+   來源：夸克口湖鳥類調查樣線.kmz
+════════════════════════════════════════════ */
+const KOULHU_LINES = {
+  K01: [[23.6121147,120.1553472],[23.612089,120.1550672],[23.6120762,120.1539616],[23.612089,120.1532478],[23.6121403,120.1532058],[23.6133201,120.1531778],[23.6133843,120.1531918],[23.6133971,120.1545914]],
+  K02: [[23.6091731,120.1851151],[23.6094295,120.1841354],[23.613123,120.185451]],
+  K03: [[23.6095754,120.159574],[23.6095626,120.1605537],[23.6095882,120.1610296],[23.6097293,120.1611276],[23.6101397,120.1612955],[23.6108322,120.1615055],[23.6108835,120.1614775],[23.6108835,120.1611975],[23.6108579,120.1592801]],
+  K04: [[23.6052495,120.1938211],[23.609379,120.1955566]],
+  K05: [[23.6052663,120.1519531],[23.6052855,120.152394],[23.6053048,120.1529748],[23.6053048,120.1532827],[23.6052471,120.1533387],[23.6043237,120.1533737],[23.6041249,120.1533527],[23.6040351,120.1532967],[23.6040287,120.1530798],[23.6040223,120.1525549],[23.6040159,120.1519461],[23.6040287,120.1515752],[23.6040287,120.1512813]],
+  K06: [[23.6063829,120.1862193],[23.6054334,120.1858825],[23.6051943,120.1858018],[23.6051192,120.1859223],[23.6049829,120.1865612],[23.6042951,120.1864075],[23.6042066,120.1861807],[23.6040431,120.1860932],[23.6038101,120.1860757],[23.6034666,120.1860652],[23.6031742,120.1858143],[23.6028006,120.1856334],[23.6025671,120.1855022]],
+  K07: [[23.6010941,120.194171],[23.6008504,120.1937791],[23.6006837,120.1933592],[23.6007863,120.1932613],[23.6008504,120.1926874],[23.6009658,120.1925195],[23.6010941,120.1922396],[23.6013634,120.1921556],[23.6016328,120.1922815],[23.6029409,120.1928414]],
+  K08: [[23.5999182,120.1855857],[23.5997001,120.184662],[23.5996873,120.184536],[23.5997386,120.1843961],[23.599854,120.1842841],[23.6000079,120.1842421],[23.6000593,120.1841441],[23.6001619,120.1837103],[23.6002901,120.1832064],[23.6004825,120.1823386],[23.6008031,120.180939]],
+  K09: [[23.5923124,120.1939274],[23.5922804,120.1937525],[23.5918635,120.1929127],[23.5915236,120.1924718],[23.5912991,120.1922269],[23.5906642,120.191681],[23.5897856,120.1909812],[23.5889776,120.1903164]],
+  K10: [[23.5792851,120.2061442],[23.5791536,120.2070155],[23.5789933,120.2080967],[23.5790029,120.2081247],[23.5790414,120.2081562],[23.57916,120.2081772],[23.5817416,120.2085831]],
+  K11: [[23.5747665,120.1658337],[23.5750937,120.1659177],[23.5751963,120.1659177],[23.5753053,120.1657428],[23.5753887,120.1656028],[23.5754721,120.1655818],[23.5767998,120.1657288],[23.576896,120.1657428],[23.5770948,120.1657918],[23.5776143,120.1659177],[23.5778516,120.1659527],[23.578012,120.1658827],[23.578044,120.1656658],[23.5780889,120.1654908],[23.5781531,120.1653229],[23.5782814,120.1652389],[23.5783968,120.1651059],[23.57857,120.165022]],
+  K12: [[23.5756517,120.1858709],[23.5751642,120.1842194],[23.5746511,120.1830997],[23.5742406,120.1821199],[23.5738558,120.1812522],[23.5734773,120.1803424],[23.5736184,120.1803494],[23.5737724,120.1804544],[23.5740418,120.1805909],[23.5743368,120.1807098],[23.5745292,120.1807676],[23.5749077,120.1809005],[23.5751001,120.1810055],[23.5753246,120.1810825],[23.5756068,120.1811315],[23.575998,120.1812364],[23.5760814,120.1812574],[23.5763251,120.1812994],[23.5765817,120.1813344],[23.5767613,120.1813764]],
+  K13: [[23.5719444,120.181938],[23.5718834,120.1819625],[23.5717584,120.1820185],[23.5714312,120.1821724],[23.5715804,120.1824541],[23.5718065,120.1828897],[23.5719171,120.1831382],[23.5722378,120.1840199],[23.5725713,120.1850136],[23.5728151,120.1856994],[23.5729305,120.1862033]],
+  K14: [[23.5696786,120.1634579],[23.5702302,120.1637238],[23.5719107,120.1643677],[23.5723084,120.1645636],[23.5725393,120.1645916],[23.5726291,120.1646616],[23.5727958,120.1647455],[23.5731165,120.1648295],[23.5734501,120.1649135],[23.573527,120.1649135],[23.5740915,120.159427]],
+  K15: [[23.567719,120.1712082],[23.5691815,120.1716631],[23.572395,120.1726988],[23.572613,120.1727653],[23.572783,120.1728108],[23.5728151,120.1728038],[23.5729177,120.1715616],[23.5729883,120.1708898],[23.5730909,120.1698541],[23.5731935,120.1686155]],
+  K16: [[23.5671842,120.2011533],[23.5673253,120.2004955],[23.5673766,120.2004255],[23.5683259,120.2014053],[23.568544,120.2018391],[23.5686338,120.2019791],[23.5689417,120.2024969],[23.5690443,120.202315],[23.5688134,120.2018251],[23.568993,120.2016852],[23.5697884,120.1961007]],
+  K17: [[23.5651773,120.1612325],[23.5656006,120.1608266],[23.566024,120.1604977],[23.566364,120.1601828],[23.5665179,120.1601058],[23.5671786,120.1602038],[23.5674416,120.1602528],[23.5674865,120.1603578],[23.5673005,120.1610366],[23.5672171,120.1613655],[23.5673325,120.1614985],[23.5675057,120.1616524],[23.567634,120.1617224],[23.5678585,120.1617924]],
+  K18: [[23.5624439,120.1750191],[23.5628801,120.175271],[23.5638294,120.1757749],[23.5647531,120.1762508],[23.5660873,120.1772865],[23.5676524,120.1784622],[23.5681143,120.178854],[23.5687557,120.1796658],[23.5690636,120.1801417]],
+  K19: [[23.5630605,120.166544],[23.563115,120.1665545],[23.563787,120.1666788],[23.563981,120.1667102],[23.5642889,120.1667715],[23.5643803,120.166796],[23.5644541,120.166859],[23.5645086,120.166866],[23.5645567,120.166845],[23.5646465,120.1669324],[23.5647331,120.1670304],[23.5647876,120.1671074],[23.5648742,120.1673173],[23.5650282,120.1677127],[23.5652976,120.168374],[23.565567,120.1690668],[23.5658139,120.1697072]],
+  K20: [[23.5548804,120.1849829],[23.555029,120.184885],[23.5551144,120.1848441],[23.5555116,120.1845546],[23.5566971,120.1835404],[23.5569585,120.1833707],[23.5572504,120.183105],[23.557382,120.1831204],[23.5577807,120.1831219],[23.5581494,120.1830954],[23.5584514,120.183134],[23.558727,120.1831161],[23.5593453,120.1831064],[23.5599576,120.1833185],[23.5606402,120.183376],[23.5613509,120.183387],[23.5623042,120.1835816]],
+  K21: [[23.5552433,120.1887423],[23.5577644,120.1895681],[23.5578029,120.1895401],[23.5578798,120.1887003],[23.5579183,120.1886443],[23.5582262,120.1886303],[23.5583417,120.1886163],[23.5585983,120.1885184],[23.5588164,120.1883924],[23.5590217,120.1883784]],
+  K22: [[23.5466631,120.1817058],[23.5465925,120.1814678],[23.5465925,120.1813069],[23.5466502,120.1812369],[23.5467657,120.1812019],[23.5468299,120.1811039],[23.5468427,120.1793404],[23.5468363,120.1769681]],
+  K23: [[23.5425828,120.1806071],[23.5428523,120.180768],[23.5431282,120.180957],[23.5433463,120.1811669],[23.5436542,120.1814538],[23.544052,120.1817967],[23.544732,120.1823916],[23.5455019,120.1830844],[23.5461178,120.1836652]],
+  K24: [[23.5409709,120.1920034],[23.5409581,120.1921363],[23.5407913,120.19348],[23.5407207,120.1941658],[23.5406951,120.1943967],[23.5406694,120.1944457],[23.540586,120.1944947],[23.5405539,120.1945857],[23.5405732,120.1947186],[23.5406309,120.1949006],[23.5406373,120.1950335],[23.5405796,120.1951665],[23.5406052,120.1953344],[23.540817,120.1954744],[23.5413751,120.1958873],[23.5422605,120.1965101],[23.5425107,120.1966361],[23.5428122,120.196825],[23.542902,120.196874],[23.5429726,120.196846],[23.5430945,120.1964821],[23.54321,120.1960273],[23.5433126,120.1957123],[23.5435436,120.1948656],[23.5437553,120.1941798],[23.5439125,120.1936409]],
+  K25: [[23.5457393,120.1620377],[23.5454955,120.1618138],[23.5445588,120.16103],[23.5428908,120.1596584],[23.5428266,120.1597564],[23.5428395,120.1604142],[23.5428138,120.1605682],[23.5427881,120.1614779],[23.5427112,120.1615339],[23.541736,120.1613659],[23.5411329,120.161254],[23.5403438,120.161093],[23.5398915,120.1610615],[23.5397632,120.1610685],[23.539035,120.1610125]],
+  K26: [[23.5358993,120.1940031],[23.5359121,120.1919876],[23.5381961,120.1937092]],
+  K27: [[23.5273883,120.1552776],[23.5273907,120.1553323],[23.5273923,120.1553778],[23.5273891,120.1554443],[23.5273763,120.155509],[23.5272496,120.1558292],[23.5272111,120.1559481],[23.5271678,120.1560024],[23.5271325,120.1560391],[23.5270314,120.1561563],[23.5270186,120.1561878],[23.527017,120.1562211],[23.5270475,120.1562473],[23.5280885,120.1565465],[23.5305652,120.1571203],[23.5308026,120.1571693],[23.5308988,120.1572183],[23.5309373,120.1573232],[23.5309373,120.1589328],[23.5309373,120.1589818],[23.5309758,120.1590028],[23.5333369,120.1589958]],
+  K28: [[23.5241352,120.1651694],[23.5252902,120.1651134],[23.526458,120.1650994],[23.5275616,120.1650714],[23.5276642,120.1651134],[23.5277284,120.1651834],[23.5277027,120.1659671],[23.5277156,120.1662331]],
+  K29: [[23.5186755,120.1776946],[23.5168532,120.1767288],[23.515942,120.1790522],[23.5160446,120.1792201],[23.5176617,120.1805778],[23.5179183,120.1808017],[23.518175,120.1808157],[23.518637,120.1808437],[23.5189194,120.1808997],[23.5192402,120.1809836],[23.5196124,120.1810676],[23.520023,120.1811936]],
+};
+
+const LINE_KEYS = Object.keys(KOULHU_LINES).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+
+/* ════════════════════════════════════════════
+   Species list
+════════════════════════════════════════════ */
+const SPECIES_GROUPS=[
+  {group:'B — 鷺鷥鹮',items:['小白鷺','大白鷺','夜鷺','黃頭鷺','蒼鷺','黃小鷺','中白鷺','紫鷺','黑冠麻鷺','埃及聖鹮','黑面琵鷺']},
+  {group:'D — 鷸鴴類',items:['高蹺鴴','鷹斑鷸','小環頸鴴','東方環頸鴴','反嘴鴴','青足鷸','太平洋金斑鴴','磯鷸','小青足鷸','長趾濱鷸','彎嘴濱鷸','黑腹濱鷸','翻石鷸','反嘴鷸','田鷸','赤足鷸','紅胸濱鷸','其他鷸鴴類']},
+  {group:'A — 雁鴨鸊鷉鸕鷀',items:['小鸊鷉','赤頸鴨','小水鴨','尖尾鴨','琵嘴鴨','花嘴鴨','鸕鷀','其他雁鴨類']},
+  {group:'C — 秧雞彩鷸水雉',items:['紅冠水雞','白冠雞','彩鷸','水雉','緋秧雞','白腹秧雞']},
+  {group:'E — 鷗燕鷗類',items:['紅燕鷗','裡海燕鷗','蒼燕鷗','黑腹燕鷗','小燕鷗','其他鷗類']},
+  {group:'猛禽',items:['魚鷹','紅隼','澤鵟','東方澤鵟','黑翅鳶']},
+  {group:'其他',items:['翠鳥','燕鴴','戴勝','家燕','棕背伯勞','麻雀','其他（見備註）']}
+];
+
+/* ════════════════════════════════════════════
+   Chip definitions
+════════════════════════════════════════════ */
+const CHIP_DEFS={
+  bv:[{v:'F',l:'F 覓食'},{v:'R',l:'R 棲息'},{v:'B',l:'B 繁殖'},{v:'A',l:'A 飛過'},{v:'U',l:'U 未知'},{v:'O',l:'O 其他'}],
+  bm:[
+    {v:'WF',l:'WF 淺水/水域邊緣'},{v:'WS',l:'WS 水域表層'},{v:'FB',l:'FB 魚塭堤岸'},
+    {v:'SD',l:'SD 裸土'},{v:'SW',l:'SW 溼土'},{v:'SE',l:'SE 外來土堆'},{v:'PU',l:'PU 積水或水溝'},
+    {v:'MA',l:'MA 紅樹林'},{v:'MH',l:'MH 草澤'},{v:'TR',l:'TR 樹'},{v:'TG',l:'TG 高草'},{v:'LG',l:'LG 短草'},
+    {v:'AP',l:'AP 人工建物'},{v:'RO',l:'RO 路面'},{v:'TO',l:'TO 電塔'},{v:'CA',l:'CA 電線'},{v:'PO',l:'PO 電線桿'},
+    {v:'FD',l:'FD 料桶/設備'},{v:'AI',l:'AI 空中'},{v:'PASS',l:'PASS 飛過'}
+  ]
+};
+
+/* ════════════════════════════════════════════
+   TWD97 TM2 轉換（WGS84 → EPSG:3826）
+   使用橫麥卡托投影，中央子午線 121°E
+════════════════════════════════════════════ */
+function wgs84ToTM2(lat, lng){
+  const a=6378137, f=1/298.257222101;
+  const b=a*(1-f), e2=2*f-f*f, e=Math.sqrt(e2);
+  const k0=0.9999, lon0=121*Math.PI/180;
+  const FN=0, FE=250000;
+  const phi=lat*Math.PI/180, lam=lng*Math.PI/180;
+  const dlam=lam-lon0;
+  const N=a/Math.sqrt(1-e2*Math.sin(phi)**2);
+  const T=Math.tan(phi)**2;
+  const C=(e2/(1-e2))*Math.cos(phi)**2;
+  const A=Math.cos(phi)*dlam;
+  const e4=e2*e2, e6=e4*e2;
+  const M=a*((1-e2/4-3*e4/64-5*e6/256)*phi
+    -(3*e2/8+3*e4/32+45*e6/1024)*Math.sin(2*phi)
+    +(15*e4/256+45*e6/1024)*Math.sin(4*phi)
+    -(35*e6/3072)*Math.sin(6*phi));
+  const M0=0;
+  const x=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T**2+72*C-58*(e2/(1-e2)))*A**5/120)+FE;
+  const y=k0*(M-M0+N*Math.tan(phi)*(A**2/2+(5-T+9*C+4*C**2)*A**4/24+(61-58*T+T**2+600*C-330*(e2/(1-e2)))*A**6/720))+FN;
+  return {x:Math.round(x*100)/100, y:Math.round(y*100)/100};
+}
+
+/* ════════════════════════════════════════════
+   Haversine
+════════════════════════════════════════════ */
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000,toR=Math.PI/180;
+  const dLat=(lat2-lat1)*toR, dLng=(lng2-lng1)*toR;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*toR)*Math.cos(lat2*toR)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* 找最近樣線（點到折線最短距離） */
+function nearestLineToPoint(lat,lng){
+  let best={lineName:'',dist:Infinity,projLat:lat,projLng:lng};
+  Object.entries(KOULHU_LINES).forEach(([name,pts])=>{
+    for(let i=0;i<pts.length-1;i++){
+      const {dist,pLat,pLng}=ptSegDist(lat,lng,pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1]);
+      if(dist<best.dist) best={lineName:name,dist,projLat:pLat,projLng:pLng};
+    }
+    // also check last point
+    const d=haversine(lat,lng,pts[pts.length-1][0],pts[pts.length-1][1]);
+    if(d<best.dist) best={lineName:name,dist:d,projLat:pts[pts.length-1][0],projLng:pts[pts.length-1][1]};
+  });
+  return best;
+}
+
+function ptSegDist(px,py,ax,ay,bx,by){
+  // simplified in degree space (ok for short segments)
+  const dx=bx-ax, dy=by-ay;
+  if(dx===0&&dy===0){return{dist:haversine(px,py,ax,ay),pLat:ax,pLng:ay};}
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+  const pLat=ax+t*dx, pLng=ay+t*dy;
+  return{dist:haversine(px,py,pLat,pLng),pLat,pLng};
+}
+
+/* ════════════════════════════════════════════
+   App state
+════════════════════════════════════════════ */
+const STORE_KEY='koulhu_v1';
+let S={
+  recs:[],           // 鳥種紀錄
+  pts:[],            // 打點紀錄 {id,ptNum,lineName,lat,lng,x,y,time,acc}
+  nextPtNum:1,       // 全局流水號
+  chips:{bv:'',bm:''},
+  sort:'latest',
+  selectedLine:''    // 手動選線
+};
+
+let watchId=null;
+let maps={b:null,s:null}, myLocMarkers={b:null,s:null}, ptMarkers={b:[],s:[]};
+let linePolylines={b:{},s:{}};
+let pendingPt=null; // 待填表的打點
+
+/* ════════════════════════════════════════════
+   Init
+════════════════════════════════════════════ */
+function init(){
+  const now=new Date();
+  document.getElementById('hdrNow').textContent=fmtDate(now);
+  const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('sessStart').value=`${hh}:${mm}`;
+  document.getElementById('b-time').value=`${hh}:${mm}`;
+
+  const sel=document.getElementById('selDate');
+  for(let i=0;i<90;i++){
+    const d=new Date(now); d.setDate(now.getDate()-i);
+    const v=fmtDate(d), o=document.createElement('option');
+    o.value=v; o.textContent=v+(i===0?' ✓ 今天':''); sel.appendChild(o);
+  }
+
+  try{const sv=localStorage.getItem(STORE_KEY);if(sv){const p=JSON.parse(sv);S.recs=p.recs||[];S.pts=p.pts||[];S.nextPtNum=p.nextPtNum||1;}}catch(e){}
+
+  buildChips();
+  buildSpeciesDropdown();
+  buildLineSelector();
+  render();
+  updStats();
+  updProgress();
+  renderPtList();
+  initGS();
+  setTimeout(()=>initMap('b'),120);
+
+  setInterval(()=>{document.getElementById('hdrNow').textContent=fmtDate(new Date())+' '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});},30000);
+}
+
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function nowTime(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+function setToday(){document.getElementById('selDate').value=fmtDate(new Date());toast('✓ 已設為今天','ok');}
+
+/* ════════════════════════════════════════════
+   Line selector buttons
+════════════════════════════════════════════ */
+function buildLineSelector(){
+  const wrap=document.getElementById('lineSelectorBtns');
+  wrap.innerHTML='';
+  LINE_KEYS.forEach(k=>{
+    const btn=document.createElement('button');
+    btn.className='lbtn';
+    btn.textContent=k;
+    btn.dataset.line=k;
+    btn.onclick=()=>toggleManualLine(k);
+    wrap.appendChild(btn);
+  });
+}
+
+function toggleManualLine(k){
+  S.selectedLine=(S.selectedLine===k)?'':k;
+  document.querySelectorAll('#lineSelectorBtns .lbtn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.line===S.selectedLine);
+  });
+  if(S.selectedLine) toast(`已選擇樣線 ${S.selectedLine}`,'info');
+}
+
+function highlightNearestLineBtn(name){
+  document.querySelectorAll('#lineSelectorBtns .lbtn').forEach(b=>{
+    b.classList.toggle('nearest',b.dataset.line===name&&b.dataset.line!==S.selectedLine);
+  });
+}
+
+/* ════════════════════════════════════════════
+   Chips
+════════════════════════════════════════════ */
+function buildChips(){
+  Object.entries(CHIP_DEFS).forEach(([grp,defs])=>{
+    const c=document.getElementById(grp+'-chips');
+    if(!c) return;
+    defs.forEach(d=>{
+      const btn=document.createElement('button');
+      btn.className='chip'; btn.textContent=d.l; btn.dataset.val=d.v;
+      btn.onclick=()=>sc(grp,d.v);
+      c.appendChild(btn);
+    });
+  });
+}
+
+function sc(grp,val){
+  const cur=S.chips[grp];
+  S.chips[grp]=(cur===val)?'':val;
+  document.getElementById(grp+'-chips').querySelectorAll('.chip').forEach(c=>{
+    c.className='chip'+(c.dataset.val===S.chips[grp]&&S.chips[grp]?' sb':'');
+  });
+  document.getElementById(grp+'-v').value=S.chips[grp];
+}
+
+function gc(g){return S.chips[g]||'';}
+
+/* Edit chips */
+let editChips={};
+function scEdit(grp,val){
+  editChips[grp]=(editChips[grp]===val)?'':val;
+  document.getElementById('ech-'+grp).querySelectorAll('.chip').forEach(c=>{
+    c.className='chip'+(c.dataset.val===editChips[grp]&&editChips[grp]?' sb':'');
+  });
+  const v=document.getElementById('ecv-'+grp); if(v) v.value=editChips[grp];
+}
+
+/* ════════════════════════════════════════════
+   Species dropdown
+════════════════════════════════════════════ */
+function buildSpeciesDropdown(){
+  const dl=document.getElementById('sp-datalist');
+  dl.innerHTML='';
+  SPECIES_GROUPS.forEach(g=>{
+    const grpDiv=document.createElement('div'); grpDiv.className='sp-opt-group'; grpDiv.textContent=g.group; dl.appendChild(grpDiv);
+    g.items.forEach(sp=>{
+      const div=document.createElement('div'); div.className='sp-opt'; div.textContent=sp;
+      div.addEventListener('mousedown',e=>{e.preventDefault();selectSpecies(sp);});
+      div.addEventListener('touchstart',e=>{e.preventDefault();selectSpecies(sp);},{passive:false});
+      dl.appendChild(div);
+    });
+  });
+}
+function filterSpecies(q){
+  const dl=document.getElementById('sp-datalist');
+  const lower=q.toLowerCase();
+  dl.querySelectorAll('.sp-opt-group').forEach(g=>g.style.display='none');
+  dl.querySelectorAll('.sp-opt').forEach(el=>{
+    const match=!q.trim()||el.textContent.includes(q)||el.textContent.toLowerCase().includes(lower);
+    el.style.display=match?'':'none';
+    if(match&&el.previousElementSibling?.classList.contains('sp-opt-group')) el.previousElementSibling.style.display='';
+  });
+}
+function selectSpecies(sp){document.getElementById('b-sp-input').value=sp;document.getElementById('sp-datalist').classList.remove('on');}
+function showSpeciesList(){document.getElementById('sp-datalist').classList.add('on');filterSpecies(document.getElementById('b-sp-input').value);}
+let hideTimer=null;
+function hideSpeciesList(){hideTimer=setTimeout(()=>document.getElementById('sp-datalist').classList.remove('on'),200);}
+
+/* ════════════════════════════════════════════
+   即時定位（不打點，只顯示位置 + 預選最近樣線）
+════════════════════════════════════════════ */
+function doLocate(){
+  if(watchId!==null){stopLocate();return;}
+  if(!navigator.geolocation){toast('⚠ 瀏覽器不支援定位','warn');return;}
+  const btn=document.getElementById('btnLocate');
+  btn.classList.add('locating');
+  document.getElementById('locBtnText').textContent='定位中…';
+  document.getElementById('locBtnIcon').textContent='⏳';
+  document.getElementById('pinMapStatus').textContent='追蹤中';
+  document.getElementById('pinMapStatus').className='pin-map-status watching';
+
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    const {latitude:lat,longitude:lng,accuracy:acc}=pos.coords;
+    // 更新地圖我的位置
+    updateMyLoc('b',lat,lng);
+    if(maps['b']) maps['b'].setView([lat,lng],16);
+    // 計算最近樣線 → 自動預選（不覆蓋手動選取）
+    const nearest=nearestLineToPoint(lat,lng);
+    if(!S.selectedLine){
+      S.selectedLine=nearest.lineName;
+      document.querySelectorAll('#lineSelectorBtns .lbtn').forEach(b=>{
+        b.classList.toggle('active',b.dataset.line===S.selectedLine);
+        b.classList.toggle('nearest',b.dataset.line===nearest.lineName&&b.dataset.line!==S.selectedLine);
+      });
+    }
+    highlightNearestLineBtn(nearest.lineName);
+    // 顯示精度
+    const accBadge=document.getElementById('locAccBadge');
+    accBadge.style.display='';
+    accBadge.textContent=`精度 ±${Math.round(acc)}m`;
+    // 切換按鈕狀態（第一次定位成功後）
+    btn.classList.remove('locating');
+    btn.classList.add('tracking');
+    document.getElementById('locBtnText').textContent='追蹤中';
+    document.getElementById('locBtnIcon').textContent='🟢';
+    document.getElementById('btnLocateStop').style.display='';
+  },err=>{
+    stopLocate();
+    toast('定位失敗：'+err.message,'err');
+  },{enableHighAccuracy:true,maximumAge:3000});
+}
+
+function stopLocate(){
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  const btn=document.getElementById('btnLocate');
+  btn.className='btn-locate';
+  document.getElementById('locBtnText').textContent='即時定位';
+  document.getElementById('locBtnIcon').textContent='📡';
+  document.getElementById('pinMapStatus').textContent='待機中';
+  document.getElementById('pinMapStatus').className='pin-map-status';
+  document.getElementById('btnLocateStop').style.display='none';
+  document.getElementById('locAccBadge').style.display='none';
+}
+
+function commitPin(lat,lng,acc,source='gps'){
+  const lineName=S.selectedLine||nearestLineToPoint(lat,lng).lineName;
+  const nearest=nearestLineToPoint(lat,lng);
+  const tm2=wgs84ToTM2(lat,lng);
+  const ptNum=S.nextPtNum++;
+  const recTime=document.getElementById('b-time').value||nowTime();
+  const pt={id:Date.now(),ptNum,lineName,lat:round6(lat),lng:round6(lng),x:tm2.x,y:tm2.y,time:recTime,acc,source};
+  S.pts.push(pt);
+  pendingPt=pt;
+
+  // 更新 UI
+  document.getElementById('piLine').textContent=lineName;
+  document.getElementById('piPtNum').textContent=String(ptNum);
+  const srcLabel=source==='map'?'地圖點擊':'GPS';
+  document.getElementById('piCoord').textContent=`[${srcLabel}] WGS84: ${lat.toFixed(5)}, ${lng.toFixed(5)}  精度 ±${acc}m`;
+  document.getElementById('piDist').textContent=`距最近樣線 ${nearest.lineName}：${Math.round(nearest.dist)}m`;
+  document.getElementById('pinInfoCard').classList.add('on');
+
+  highlightNearestLineBtn(nearest.lineName);
+  save();
+  renderMapPts('b');
+  renderPtList();
+  if(maps['b']) maps['b'].setView([lat,lng],17);
+  toast(`✓ 打點 #${ptNum} 已建立（${lineName}）`,'info');
+}
+
+function round6(v){return Math.round(v*1e6)/1e6;}
+
+/* 地圖點擊打點（無距離限制，可打在魚塭任意位置） */
+function handleMapClick(lat,lng,ctx){
+  if(ctx!=='b') return;
+  commitPin(lat,lng,0,'map'); // acc=0 表地圖點擊
+}
+
+
+/* ════════════════════════════════════════════
+   Tab navigation
+════════════════════════════════════════════ */
+function goTab(t){
+  ['b','s'].forEach(x=>{
+    document.getElementById('panel-'+x).classList.remove('on');
+    document.getElementById('tab-'+x).className='tab';
+    document.getElementById('nav-'+x).className='nb';
+  });
+  document.getElementById('panel-'+t).classList.add('on');
+  const cls={b:'ab',s:'as'}[t];
+  document.getElementById('tab-'+t).className='tab '+cls;
+  document.getElementById('nav-'+t).className='nb '+cls;
+  setTimeout(()=>initMap(t),80);
+  if(t==='s') updSummary();
+  window.scrollTo(0,0);
+}
+
+/* ════════════════════════════════════════════
+   Add Bird
+════════════════════════════════════════════ */
+function addB(){
+  if(!pendingPt){toast('⚠ 請先打點（GPS 打點或地圖點擊）','warn');return;}
+  const dp=document.getElementById('selDate').value;
+  if(!dp){toast('⚠ 請先選擇調查日期','warn');return;}
+  const sp=document.getElementById('b-sp-input').value.trim();
+  if(!sp){toast('⚠ 請輸入或選擇物種','warn');return;}
+  const bv=gc('bv'); if(!bv){toast('⚠ 請選擇行為代碼','warn');return;}
+
+  const ymd=dp.split('-');
+  const recTime=document.getElementById('b-time').value||nowTime();
+
+  S.recs.push({
+    id:Date.now(),
+    案場編號:document.getElementById('sessCase').value.trim(),
+    年:ymd[0],月:ymd[1],日:ymd[2],
+    穿越線區域:pendingPt.lineName,
+    點位編號:pendingPt.ptNum,
+    X_TWD97TM2:pendingPt.x,
+    Y_TWD97TM2:pendingPt.y,
+    lat:pendingPt.lat,
+    lng:pendingPt.lng,
+    時間:recTime,
+    物種:sp,
+    數量:parseInt(document.getElementById('b-cnt').value)||1,
+    行為:bv,
+    微棲地:gc('bm'),
+    備註:document.getElementById('b-note').value.trim(),
+    備註_物種:document.getElementById('b-spn').value.trim(),
+    備註_行為:document.getElementById('b-bvn').value.trim(),
+    備註_微棲地:document.getElementById('b-mhn').value.trim(),
+    調查者:document.getElementById('sessObs').value.trim(),
+    開始時間:document.getElementById('sessStart').value,
+    結束時間:document.getElementById('sessEnd').value,
+    滿潮時間:document.getElementById('sessTide').value
+  });
+
+  document.getElementById('sessEnd').value=recTime;
+  document.getElementById('b-time').value=nowTime();
+  save(); renderB(); updStats(); updProgress(); clearBF();
+  toast('✓ 鳥種紀錄已新增','ok');
+}
+
+function clearBF(){
+  document.getElementById('b-sp-input').value='';
+  document.getElementById('b-cnt').value=1;
+  ['b-spn','b-bvn','b-mhn','b-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['bv','bm'].forEach(g=>{S.chips[g]='';document.getElementById(g+'-chips').querySelectorAll('.chip').forEach(c=>c.className='chip');document.getElementById(g+'-v').value='';});
+  // pendingPt 保留，允許同一打點連續新增多筆
+}
+
+function adj(d){const inp=document.getElementById('b-cnt');inp.value=Math.max(1,(parseInt(inp.value)||1)+d);}
+
+/* ════════════════════════════════════════════
+   Sort & Render
+════════════════════════════════════════════ */
+function setSort(t,mode){
+  S.sort=mode;
+  document.querySelectorAll('.sbtn').forEach(b=>{
+    const active=b.dataset.sort===`b-${mode}`;
+    b.className='sbtn'+(active?' active b':'');
+  });
+  renderB();
+}
+
+function sortedRecs(){
+  const recs=[...S.recs];
+  if(S.sort==='latest') return recs.reverse();
+  if(S.sort==='line') return recs.sort((a,b)=>a.穿越線區域.localeCompare(b.穿越線區域)||a.點位編號-b.點位編號);
+  if(S.sort==='pt') return recs.sort((a,b)=>a.點位編號-b.點位編號);
+  if(S.sort==='time') return recs.sort((a,b)=>(a.時間||'').localeCompare(b.時間||''));
+  return recs.reverse();
+}
+
+function renderB(){
+  const list=document.getElementById('b-list');
+  const badge=document.getElementById('b-badge');
+  const recs=sortedRecs();
+  badge.textContent=S.recs.length?`(${S.recs.length})`:'';
+  if(!recs.length){list.innerHTML='<div class="empty"><div class="empty-i">🦅</div>尚無鳥種紀錄</div>';return;}
+  list.innerHTML=recs.map(r=>`
+    <div class="ri rb">
+      <span class="rpill b">${r.穿越線區域}＃${r.點位編號}</span>
+      <div class="rinfo">
+        <div class="rm">${r.物種} ×${r.數量}</div>
+        <div class="rs">${r.時間||''} ${r.年}/${r.月}/${r.日} ｜ ${r.行為}${r.微棲地?' '+r.微棲地:''}${r.備註?' ｜ '+r.備註:''}</div>
+      </div>
+      <div class="r-actions">
+        <button class="redit" onclick="editRec(${r.id})">✎</button>
+        <button class="rdel" onclick="del(${r.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function render(){renderB();}
+
+/* ════════════════════════════════════════════
+   Edit
+════════════════════════════════════════════ */
+function editRec(id){
+  const rec=S.recs.find(r=>r.id===id);
+  if(!rec) return;
+  editChips={bv:rec.行為||'',bm:rec.微棲地||''};
+  document.getElementById('editTitle').textContent=`✎ ${rec.穿越線區域}＃${rec.點位編號} ${rec.物種}`;
+  let html=`<div class="f"><label>物種<span class="req">★</span></label><input type="text" id="edit-sp" value="${rec.物種||''}"></div>`;
+  html+=`<div class="f"><label>數量</label><div class="crow"><button class="cbtn" onclick="adjEdit(-1)">−</button><input class="cinput" type="number" id="edit-cnt" value="${rec.數量||1}" min="1"><button class="cbtn" onclick="adjEdit(1)">＋</button><button class="cbtn sm" onclick="adjEdit(5)">+5</button></div></div>`;
+  html+=`<div class="f"><label>記錄時間</label><input type="time" id="edit-time" value="${rec.時間||''}" style="max-width:160px"></div>`;
+  // bv chips
+  html+=`<div class="f"><label>行為<span class="req">★</span></label><div class="chips" id="ech-bv">`;
+  CHIP_DEFS.bv.forEach(d=>{html+=`<button class="chip${editChips.bv===d.v?' sb':''}" data-val="${d.v}" onclick="scEdit('bv','${d.v}')">${d.l}</button>`;});
+  html+=`</div><input class="cinp" type="text" id="ecv-bv" value="${rec.行為||''}" readonly></div>`;
+  // bm chips
+  html+=`<div class="f"><label>微棲地</label><div class="chips" id="ech-bm">`;
+  CHIP_DEFS.bm.forEach(d=>{html+=`<button class="chip${editChips.bm===d.v?' sb':''}" data-val="${d.v}" onclick="scEdit('bm','${d.v}')">${d.l}</button>`;});
+  html+=`</div><input class="cinp" type="text" id="ecv-bm" value="${rec.微棲地||''}" readonly></div>`;
+  html+=`<div class="f"><label>備註</label><textarea id="edit-note">${rec.備註||''}</textarea></div>`;
+  html+=`<button class="btn-save" onclick="saveEdit(${id})">💾 儲存</button>`;
+  document.getElementById('editBody').innerHTML=html;
+  document.getElementById('editOverlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+
+function adjEdit(d){const inp=document.getElementById('edit-cnt');if(inp)inp.value=Math.max(1,(parseInt(inp.value)||1)+d);}
+
+function saveEdit(id){
+  const rec=S.recs.find(r=>r.id===id); if(!rec){toast('找不到紀錄','err');return;}
+  const sp=document.getElementById('edit-sp')?.value.trim();
+  if(!sp){toast('⚠ 請輸入物種','warn');return;}
+  const bv=editChips.bv; if(!bv){toast('⚠ 請選擇行為','warn');return;}
+  rec.物種=sp; rec.數量=parseInt(document.getElementById('edit-cnt')?.value)||1;
+  rec.時間=document.getElementById('edit-time')?.value||'';
+  rec.行為=bv; rec.微棲地=editChips.bm||'';
+  rec.備註=document.getElementById('edit-note')?.value.trim()||'';
+  save(); render(); updStats(); closeEdit(); toast('✓ 已儲存','ok');
+}
+
+function closeEdit(){document.getElementById('editOverlay').classList.remove('on');document.body.style.overflow='';}
+
+/* ════════════════════════════════════════════
+   Delete
+════════════════════════════════════════════ */
+function del(id){
+  if(!confirm('確定刪除這筆紀錄？')) return;
+  S.recs=S.recs.filter(r=>r.id!==id);
+  save(); renderB(); updStats(); updProgress(); toast('已刪除','ok');
+}
+
+/* ════════════════════════════════════════════
+   Stats
+════════════════════════════════════════════ */
+function updStats(){
+  document.getElementById('sb-n').textContent=S.recs.length;
+  document.getElementById('st-n').textContent=S.recs.reduce((s,r)=>s+(r.數量||0),0);
+  document.getElementById('sp-n').textContent=S.pts.length;
+  const sps=new Set(S.recs.map(r=>r.物種));
+  document.getElementById('sfam-n').textContent=sps.size;
+}
+
+function updSummary(){
+  updStats(); updProgress();
+  const sb=document.getElementById('sb-list');
+  const br=S.recs;
+  sb.innerHTML=br.length
+    ?br.slice(-5).reverse().map(r=>`<div class="ri rb"><span class="rpill b">${r.穿越線區域}＃${r.點位編號}</span><div class="rinfo"><div class="rm">${r.物種} ×${r.數量}</div><div class="rs">${r.時間||''} ${r.年}/${r.月}/${r.日} ｜ ${r.行為}</div></div></div>`).join('')+(br.length>5?`<div class="empty" style="padding:8px">… 共 ${br.length} 筆</div>`:'')
+    :'<div class="empty"><div class="empty-i">🦅</div>尚無鳥種紀錄</div>';
+}
+
+/* ════════════════════════════════════════════
+   Progress
+════════════════════════════════════════════ */
+function updProgress(){
+  const body=document.getElementById('progressBody');
+  const badge=document.getElementById('progressAllBadge');
+  if(!body) return;
+  // 計算各樣線打點數
+  const lineMap={};
+  S.pts.forEach(pt=>{lineMap[pt.lineName]=(lineMap[pt.lineName]||0)+1;});
+  const totalLines=LINE_KEYS.length;
+  const visitedLines=Object.keys(lineMap).length;
+  let html='';
+  const maxPts=Math.max(1,...Object.values(lineMap));
+  LINE_KEYS.forEach(k=>{
+    const cnt=lineMap[k]||0;
+    const pct=Math.round(cnt/maxPts*100);
+    html+=`<div class="lp-row">
+      <span class="lp-name">${k}</span>
+      <div class="lp-bar-track"><div class="lp-bar-fill" style="width:${pct}%"></div></div>
+      <span class="lp-count">${cnt} 點</span>
+    </div>`;
+  });
+  body.innerHTML=html||'<div style="padding:8px 0;font-size:12px;color:var(--dim)">尚未打點</div>';
+  if(!visitedLines){badge.textContent='尚未記錄';badge.className='progress-all-badge none';}
+  else{badge.textContent=`${visitedLines}/${totalLines} 條`;badge.className='progress-all-badge wip';}
+}
+
+/* ════════════════════════════════════════════
+   Leaflet Map
+════════════════════════════════════════════ */
+function initMap(ctx){
+  if(maps[ctx]){setTimeout(()=>maps[ctx].invalidateSize(),50);renderMapPts(ctx);return;}
+  const el=document.getElementById(ctx==='b'?'bSurveyMap':'surveyMap');
+  if(!el||el.offsetWidth===0) return;
+  // 計算中心
+  let latSum=0,lngSum=0,cnt=0;
+  Object.values(KOULHU_LINES).forEach(pts=>pts.forEach(p=>{latSum+=p[0];lngSum+=p[1];cnt++;}));
+  const center=[latSum/cnt, lngSum/cnt];
+  const m=L.map(el.id,{zoomControl:true}).setView(center,13);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri Satellite',maxZoom:20}).addTo(m);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,opacity:0.7}).addTo(m);
+  maps[ctx]=m;
+  // 繪製所有樣線
+  LINE_KEYS.forEach(k=>{
+    const pl=L.polyline(KOULHU_LINES[k],{color:'#f59e0b',weight:3,opacity:0.85,dashArray:ctx==='s'?null:'4 4'}).addTo(m);
+    pl.bindTooltip(k,{permanent:false,sticky:true,className:'',offset:[0,-5]});
+    // 樣線端點小點
+    [KOULHU_LINES[k][0], KOULHU_LINES[k][KOULHU_LINES[k].length-1]].forEach(pt=>{
+      L.circleMarker(pt,{radius:4,color:'#f59e0b',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(m);
+    });
+    if(!linePolylines[ctx]) linePolylines[ctx]={};
+    linePolylines[ctx][k]=pl;
+    // 點擊樣線顯示名稱並選取
+    if(ctx==='b') pl.on('click',()=>{
+      S.selectedLine=(S.selectedLine===k)?'':k;
+      document.querySelectorAll('#lineSelectorBtns .lbtn').forEach(b=>b.classList.toggle('active',b.dataset.line===S.selectedLine));
+      toast(S.selectedLine?`已選取樣線 ${k}`:'已取消樣線選取','info');
+    });
+  });
+  // 地圖點擊打點
+  if(ctx==='b') m.on('click',e=>handleMapClick(e.latlng.lat,e.latlng.lng,'b'));
+  renderMapPts(ctx);
+}
+
+function renderMapPts(ctx){
+  if(!maps[ctx]) return;
+  ptMarkers[ctx].forEach(m=>m.remove());
+  ptMarkers[ctx]=[];
+  S.pts.forEach(pt=>{
+    const hasRec=S.recs.some(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const isPending=pendingPt&&pendingPt.ptNum===pt.ptNum;
+    const color=isPending?'#7c3aed':hasRec?'#1a7a5e':'#1a56a0';
+    const recs=S.recs.filter(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const sps=recs.length?[...new Set(recs.map(r=>r.物種))].join('、'):'尚未記錄';
+
+    // 有鳥種記錄 → 普通 circleMarker（不可拖曳）
+    // 無鳥種記錄 → 可拖曳的 marker（用 DivIcon 模擬圓點）
+    if(hasRec){
+      const m=L.circleMarker([pt.lat,pt.lng],{radius:isPending?10:7,color:'#fff',weight:2,fillColor:color,fillOpacity:.92}).addTo(maps[ctx]);
+      m.bindPopup(`<b style="color:#7c3aed">${pt.lineName} ＃${pt.ptNum}</b><br><small>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}</small><br>🦅 ${sps}`);
+      ptMarkers[ctx].push(m);
+    } else {
+      // 無記錄的點 → 可拖曳，拖曳結束後更新座標
+      const icon=L.divIcon({
+        className:'',
+        html:`<div style="width:${isPending?20:14}px;height:${isPending?20:14}px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:grab;margin-top:${isPending?-10:-7}px;margin-left:${isPending?-10:-7}px"></div>`,
+        iconSize:[0,0]
+      });
+      const m=L.marker([pt.lat,pt.lng],{icon,draggable:ctx==='b',autoPan:true}).addTo(maps[ctx]);
+      const popupContent=()=>`<b style="color:#7c3aed">${pt.lineName} ＃${pt.ptNum}</b><br>
+        <small>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}</small><br>
+        ${ctx==='b'?'<span style="color:#888;font-size:11px">⇄ 可拖曳移動位置</span><br>':''}
+        <button onclick="deletePt(${pt.ptNum})" style="margin-top:4px;padding:3px 8px;border-radius:4px;border:1px solid #f5a9a9;background:#fdecea;color:#c0392b;font-size:11px;cursor:pointer">🗑 刪除此打點</button>`;
+      m.bindPopup(popupContent());
+      if(ctx==='b'){
+        m.on('dragend',e=>{
+          const {lat:newLat,lng:newLng}=e.target.getLatLng();
+          const tm2=wgs84ToTM2(newLat,newLng);
+          const nearest=nearestLineToPoint(newLat,newLng);
+          pt.lat=round6(newLat); pt.lng=round6(newLng);
+          pt.x=tm2.x; pt.y=tm2.y;
+          pt.lineName=S.selectedLine||nearest.lineName;
+          // 同步更新 pendingPt
+          if(pendingPt&&pendingPt.ptNum===pt.ptNum) pendingPt=pt;
+          save();
+          renderPtList();
+          // 更新 popup 內容
+          m.setPopupContent(popupContent());
+          // 更新資訊卡
+          if(pendingPt&&pendingPt.ptNum===pt.ptNum){
+            document.getElementById('piLine').textContent=pt.lineName;
+            document.getElementById('piCoord').textContent=`[拖曳] WGS84: ${newLat.toFixed(5)}, ${newLng.toFixed(5)}`;
+            document.getElementById('piDist').textContent=`距最近樣線 ${nearest.lineName}：${Math.round(nearest.dist)}m`;
+          }
+          toast(`✓ 打點 #${pt.ptNum} 座標已更新`,'ok');
+        });
+      }
+      if(isPending) m.openPopup();
+      ptMarkers[ctx].push(m);
+    }
+  });
+}
+
+/* ── 打點列表渲染 ── */
+function renderPtList(){
+  const wrap=document.getElementById('ptListWrap');
+  const list=document.getElementById('ptList');
+  const badge=document.getElementById('ptListBadge');
+  if(!S.pts.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  badge.textContent=`(${S.pts.length})`;
+  list.innerHTML=[...S.pts].reverse().map(pt=>{
+    const hasRec=S.recs.some(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const isPending=pendingPt&&pendingPt.ptNum===pt.ptNum;
+    const recLabel=hasRec?`<span style="color:var(--green);font-size:10px">🦅 有紀錄</span>`:`<span style="color:var(--dim);font-size:10px">未記錄</span>`;
+    const srcLabel=pt.source==='map'?'🖱':'📍';
+    return `<div class="pt-item${isPending?' pending':''}">
+      <span class="pt-num">#${pt.ptNum}</span>
+      <div style="flex:1;min-width:0">
+        <div class="pt-line">${srcLabel} ${pt.lineName} &nbsp;${recLabel}</div>
+        <div class="pt-coord">${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)} &nbsp;${pt.time}</div>
+      </div>
+      ${!isPending?`<button class="pt-set-pending" onclick="setPending(${pt.ptNum})">設為當前</button>`:'<span style="font-size:10px;color:var(--purple);font-weight:700">▶ 當前</span>'}
+      ${!hasRec?`<button class="pt-del" onclick="deletePt(${pt.ptNum})" title="刪除打點">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function togglePtList(){
+  const list=document.getElementById('ptList');
+  const icon=document.getElementById('ptListIcon');
+  const open=list.style.display==='flex';
+  list.style.display=open?'none':'flex';
+  icon.textContent=open?'▾':'▴';
+}
+
+/* 刪除打點（只能刪無鳥種記錄的點） */
+function deletePt(ptNum){
+  const pt=S.pts.find(p=>p.ptNum===ptNum);
+  if(!pt){toast('找不到打點','err');return;}
+  const hasRec=S.recs.some(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+  if(hasRec){toast('⚠ 此打點已有鳥種紀錄，請先刪除紀錄再刪打點','warn');return;}
+  if(!confirm(`確定刪除打點 #${ptNum}（${pt.lineName}）？`))return;
+  S.pts=S.pts.filter(p=>p.ptNum!==ptNum);
+  if(pendingPt&&pendingPt.ptNum===ptNum){
+    pendingPt=S.pts.length?S.pts[S.pts.length-1]:null;
+    if(pendingPt){
+      document.getElementById('piLine').textContent=pendingPt.lineName;
+      document.getElementById('piPtNum').textContent=String(pendingPt.ptNum);
+      document.getElementById('piCoord').textContent=`WGS84: ${pendingPt.lat.toFixed(5)}, ${pendingPt.lng.toFixed(5)}`;
+    } else {
+      document.getElementById('pinInfoCard').classList.remove('on');
+    }
+  }
+  save(); renderMapPts('b'); renderPtList(); updStats();
+  toast(`打點 #${ptNum} 已刪除`,'ok');
+}
+
+/* 切換 pending 點（讓舊打點重新成為作用中點位） */
+function setPending(ptNum){
+  const pt=S.pts.find(p=>p.ptNum===ptNum);
+  if(!pt) return;
+  pendingPt=pt;
+  document.getElementById('piLine').textContent=pt.lineName;
+  document.getElementById('piPtNum').textContent=String(pt.ptNum);
+  document.getElementById('piCoord').textContent=`WGS84: ${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}`;
+  document.getElementById('piDist').textContent='';
+  document.getElementById('pinInfoCard').classList.add('on');
+  renderMapPts('b'); renderPtList();
+  if(maps['b']) maps['b'].setView([pt.lat,pt.lng],17);
+  toast(`✓ 已切換到打點 #${ptNum}`,'info');
+}
+
+function updateMyLoc(ctx,lat,lng){
+  if(!maps[ctx]) return;
+  if(myLocMarkers[ctx]) myLocMarkers[ctx].remove();
+  myLocMarkers[ctx]=L.circleMarker([lat,lng],{radius:10,color:'#1a56a0',weight:3,fillColor:'#4a9eff',fillOpacity:.9}).bindTooltip('📍 你的位置').addTo(maps[ctx]);
+}
+
+function centerMyLocation(ctx){
+  if(!navigator.geolocation){toast('⚠ 瀏覽器不支援定位','warn');return;}
+  initMap(ctx);
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat,longitude:lng}=pos.coords;
+    updateMyLoc(ctx,lat,lng);
+    if(maps[ctx]) maps[ctx].setView([lat,lng],16);
+    toast('✓ 已定位','ok');
+    const nearest=nearestLineToPoint(lat,lng);
+    highlightNearestLineBtn(nearest.lineName);
+    toast(`最近樣線：${nearest.lineName}（${Math.round(nearest.dist)}m）`,'info');
+  },err=>toast('定位失敗：'+err.message,'err'),{enableHighAccuracy:true,timeout:15000});
+}
+
+/* ════════════════════════════════════════════
+   Export CSV
+════════════════════════════════════════════ */
+function expCSV(){
+  if(!S.recs.length){toast('⚠ 尚無資料','warn');return;}
+  const headers=['案場編號','年','月','日','穿越線區域','點位編號','X_TWD97TM2','Y_TWD97TM2','物種','數量','行為','微棲地','備註','備註_物種','備註_行為','備註_微棲地','調查者','開始時間','結束時間','滿潮時間'];
+  const rows=S.recs.map(r=>[r.案場編號||'',r.年,r.月,r.日,r.穿越線區域,r.點位編號,r.X_TWD97TM2,r.Y_TWD97TM2,r.物種,r.數量,r.行為,r.微棲地||'',r.備註||'',r.備註_物種||'',r.備註_行為||'',r.備註_微棲地||'',r.調查者||'',r.開始時間||'',r.結束時間||'',r.滿潮時間||'']);
+  dl('\uFEFF'+[headers,...rows].map(r=>r.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n'),`口湖_鳥種_${fmtDate(new Date())}.csv`,'text/csv;charset=utf-8');
+}
+
+function expPtsCSV(){
+  if(!S.pts.length){toast('⚠ 尚未打點','warn');return;}
+  const headers=['流水號','樣線','WGS84_Lat','WGS84_Lng','X_TWD97TM2','Y_TWD97TM2','時間','精度_m','來源'];
+  const rows=S.pts.map(p=>[p.ptNum,p.lineName,p.lat,p.lng,p.x,p.y,p.time,p.acc,p.source||'gps']);
+  dl('\uFEFF'+[headers,...rows].map(r=>r.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n'),`口湖_打點_${fmtDate(new Date())}.csv`,'text/csv;charset=utf-8');
+}
+
+/* ════════════════════════════════════════════
+   KML / KMZ 匯出
+   結構：
+     Folder 1 — 調查樣線（KML折線，amber色）
+     Folder 2 — 鳥種觀測點（Placemark + ExtendedData）
+     Folder 3 — 移動軌跡（按流水號排列的 LineString，藍色）
+════════════════════════════════════════════ */
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function buildKML(){
+  const date=document.getElementById('selDate').value||fmtDate(new Date());
+  const caseN=document.getElementById('sessCase').value||'口湖';
+  const obs=document.getElementById('sessObs').value||'';
+  const lines=[];
+
+  lines.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+  lines.push(`<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">`);
+  lines.push(`<Document>`);
+  lines.push(`  <name>${esc(caseN)} 水鳥調查 ${esc(date)}</name>`);
+  lines.push(`  <description>調查者：${esc(obs)}　日期：${esc(date)}</description>`);
+
+  // ── Styles ──
+  // 樣線（預設 KML 樣線：琥珀色）
+  lines.push(`  <Style id="sTransect">
+    <LineStyle><color>ff00aaff</color><width>2.5</width></LineStyle>
+    <PolyStyle><fill>0</fill></PolyStyle>
+  </Style>`);
+  // 觀測點（有鳥種記錄：綠；無：灰）
+  lines.push(`  <Style id="sPtRecord">
+    <IconStyle><color>ff3d7a1a</color><scale>0.9</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href></Icon>
+    </IconStyle>
+    <LabelStyle><scale>0.8</scale></LabelStyle>
+  </Style>`);
+  lines.push(`  <Style id="sPtEmpty">
+    <IconStyle><color>ff888888</color><scale>0.7</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-circle.png</href></Icon>
+    </IconStyle>
+    <LabelStyle><scale>0.7</scale></LabelStyle>
+  </Style>`);
+  // 軌跡（藍色）
+  lines.push(`  <Style id="sTrack">
+    <LineStyle><color>ffff5500</color><width>2</width></LineStyle>
+    <PolyStyle><fill>0</fill></PolyStyle>
+  </Style>`);
+
+  // ── Folder 1：調查樣線 ──
+  lines.push(`  <Folder><name>調查樣線</name>`);
+  Object.entries(KOULHU_LINES).forEach(([k,pts])=>{
+    const coords=pts.map(p=>`${p[1]},${p[0]},0`).join(' ');
+    lines.push(`    <Placemark>
+      <name>${esc(k)}</name>
+      <styleUrl>#sTransect</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>${coords}</coordinates>
+      </LineString>
+    </Placemark>`);
+  });
+  lines.push(`  </Folder>`);
+
+  // ── Folder 2：鳥種觀測點 ──
+  lines.push(`  <Folder><name>鳥種觀測點</name>`);
+  S.pts.forEach(pt=>{
+    const recs=S.recs.filter(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const hasRec=recs.length>0;
+    const spList=hasRec?[...new Set(recs.map(r=>r.物種))].join('、'):'（未記錄）';
+    const totalN=recs.reduce((s,r)=>s+(r.數量||0),0);
+    // 詳細描述（CDATA）
+    let desc=`<b>${esc(pt.lineName)} ＃${pt.ptNum}</b><br>`;
+    desc+=`時間：${esc(pt.time)}<br>`;
+    desc+=`座標（WGS84）：${pt.lat}, ${pt.lng}<br>`;
+    desc+=`TWD97 TM2：X=${pt.x} Y=${pt.y}<br>`;
+    if(pt.source==='map') desc+=`打點方式：地圖點擊<br>`;
+    else desc+=`打點方式：GPS（精度 ±${pt.acc}m）<br>`;
+    if(hasRec){
+      desc+=`<br><b>鳥種紀錄（共 ${totalN} 隻）：</b><br>`;
+      recs.forEach(r=>{
+        desc+=`・${esc(r.物種)} ×${r.數量}　${esc(r.行為)}`;
+        if(r.微棲地) desc+=` ${esc(r.微棲地)}`;
+        if(r.備註) desc+=`　※${esc(r.備註)}`;
+        desc+='<br>';
+      });
+    }
+    // ExtendedData
+    let ext=`<ExtendedData>
+        <Data name="穿越線區域"><value>${esc(pt.lineName)}</value></Data>
+        <Data name="點位編號"><value>${pt.ptNum}</value></Data>
+        <Data name="時間"><value>${esc(pt.time)}</value></Data>
+        <Data name="WGS84_Lat"><value>${pt.lat}</value></Data>
+        <Data name="WGS84_Lng"><value>${pt.lng}</value></Data>
+        <Data name="X_TWD97TM2"><value>${pt.x}</value></Data>
+        <Data name="Y_TWD97TM2"><value>${pt.y}</value></Data>
+        <Data name="精度_m"><value>${pt.acc}</value></Data>
+        <Data name="來源"><value>${esc(pt.source||'gps')}</value></Data>
+        <Data name="物種"><value>${esc(spList)}</value></Data>
+        <Data name="個體總數"><value>${totalN}</value></Data>
+      </ExtendedData>`;
+    lines.push(`    <Placemark>
+      <name>${esc(pt.lineName)}＃${pt.ptNum}${hasRec?' '+spList:''}</name>
+      <description><![CDATA[${desc}]]></description>
+      <styleUrl>${hasRec?'#sPtRecord':'#sPtEmpty'}</styleUrl>
+      ${ext}
+      <Point><coordinates>${pt.lng},${pt.lat},0</coordinates></Point>
+    </Placemark>`);
+  });
+  lines.push(`  </Folder>`);
+
+  // ── Folder 3：移動軌跡（按打點時間流水號） ──
+  if(S.pts.length>=2){
+    // 依流水號排序
+    const sortedPts=[...S.pts].sort((a,b)=>a.ptNum-b.ptNum);
+    const coords=sortedPts.map(p=>`${p.lng},${p.lat},0`).join('\n          ');
+    lines.push(`  <Folder><name>移動軌跡</name>
+    <Placemark>
+      <name>調查路徑 ${esc(date)}</name>
+      <description>打點數：${sortedPts.length}</description>
+      <styleUrl>#sTrack</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          ${coords}
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Folder>`);
+  }
+
+  lines.push(`</Document></kml>`);
+  return lines.join('\n');
+}
+
+/* 純 KML 下載 */
+function expKML(){
+  if(!S.pts.length&&!S.recs.length){toast('⚠ 尚無打點或紀錄','warn');return;}
+  const kmlStr=buildKML();
+  const date=document.getElementById('selDate').value||fmtDate(new Date());
+  dl(kmlStr,`口湖_調查_${date}.kml`,'application/vnd.google-earth.kml+xml');
+}
+
+/* KMZ = ZIP(doc.kml) — 純 JS 實作，不依賴外部函式庫 */
+function expKMZ(){
+  if(!S.pts.length&&!S.recs.length){toast('⚠ 尚無打點或紀錄','warn');return;}
+  const kmlStr=buildKML();
+  const date=document.getElementById('selDate').value||fmtDate(new Date());
+  const fname='口湖_調查_'+date;
+  // 用 Blob URL 包裝 KML 後以 .kml 副檔名下載（部分環境不支援 ZIP）
+  // 同時嘗試建構最小 ZIP（Local File Header + Central Directory）
+  try{
+    const kmzBlob=buildMinimalZip('doc.kml', kmlStr);
+    const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(kmzBlob),download:fname+'.kmz'});
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    toast('✓ 已下載 KMZ','ok');
+  }catch(e){
+    // fallback：下載 KML
+    dl(kmlStr,fname+'.kml','application/vnd.google-earth.kml+xml');
+    toast('KMZ 失敗，已改為下載 KML','warn');
+  }
+}
+
+/* 純 JS 最小 ZIP 建構（Local File Header + Data + Central Directory + EOCD）
+   僅支援 Stored（無壓縮），足夠 KMZ 使用 */
+function buildMinimalZip(filename, content){
+  const enc=new TextEncoder();
+  const fnBytes=enc.encode(filename);
+  const dataBytes=enc.encode(content);
+  const crc=crc32(dataBytes);
+  const now=new Date();
+  const dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+  const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+
+  function u16(n){return[n&0xff,(n>>8)&0xff];}
+  function u32(n){return[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];}
+
+  // Local File Header
+  const lfh=[0x50,0x4b,0x03,0x04, // signature
+    ...u16(20),   // version needed
+    ...u16(0),    // flags
+    ...u16(0),    // compression: stored
+    ...u16(dosTime),...u16(dosDate),
+    ...u32(crc),
+    ...u32(dataBytes.length), // compressed size
+    ...u32(dataBytes.length), // uncompressed size
+    ...u16(fnBytes.length),
+    ...u16(0),    // extra field length
+    ...fnBytes
+  ];
+
+  const localOffset=0;
+
+  // Central Directory Header
+  const cdh=[0x50,0x4b,0x01,0x02, // signature
+    ...u16(20),   // version made by
+    ...u16(20),   // version needed
+    ...u16(0),    // flags
+    ...u16(0),    // compression: stored
+    ...u16(dosTime),...u16(dosDate),
+    ...u32(crc),
+    ...u32(dataBytes.length),
+    ...u32(dataBytes.length),
+    ...u16(fnBytes.length),
+    ...u16(0),    // extra field length
+    ...u16(0),    // file comment length
+    ...u16(0),    // disk number start
+    ...u16(0),    // internal attrs
+    ...u32(0),    // external attrs
+    ...u32(localOffset),
+    ...fnBytes
+  ];
+
+  const cdhOffset=lfh.length+dataBytes.length;
+
+  // End of Central Directory
+  const eocd=[0x50,0x4b,0x05,0x06,
+    ...u16(0),    // disk number
+    ...u16(0),    // disk with CD
+    ...u16(1),    // entries on disk
+    ...u16(1),    // total entries
+    ...u32(cdh.length),
+    ...u32(cdhOffset),
+    ...u16(0)     // comment length
+  ];
+
+  const all=new Uint8Array([...lfh,...dataBytes,...cdh,...eocd]);
+  return new Blob([all],{type:'application/vnd.google-earth.kmz'});
+}
+
+/* CRC-32 for ZIP */
+function crc32(data){
+  const table=(()=>{
+    const t=new Uint32Array(256);
+    for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++) c=c&1?0xedb88320^(c>>>1):c>>>1;t[i]=c;}
+    return t;
+  })();
+  let crc=0xffffffff;
+  for(let i=0;i<data.length;i++) crc=table[(crc^data[i])&0xff]^(crc>>>8);
+  return (crc^0xffffffff)>>>0;
+}
+
+function dl(text,name,mime){
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([text],{type:mime})),download:name});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('✓ 已下載：'+name,'ok');
+}
+
+/* ════════════════════════════════════════════
+   Copy text modal
+════════════════════════════════════════════ */
+function openCopyModal(){
+  if(!S.recs.length){toast('⚠ 尚無鳥種紀錄','warn');return;}
+  const date=document.getElementById('selDate').value||'未設定';
+  const caseN=document.getElementById('sessCase').value||'';
+  const obs=document.getElementById('sessObs').value||'';
+  const lines=['=== 口湖水鳥紀錄 ===',`日期：${date}　案場：${caseN}　調查者：${obs}`,'──────────────────'];
+  S.recs.forEach(r=>{
+    let row=`${r.時間||''}　${r.穿越線區域} ＃${r.點位編號}\n  ${r.物種} ×${r.數量}　行為：${r.行為}`;
+    if(r.微棲地) row+=`　微棲地：${r.微棲地}`;
+    if(r.備註) row+=`\n  備註：${r.備註}`;
+    lines.push(row);
+  });
+  const total=S.recs.reduce((s,r)=>s+(r.數量||0),0);
+  lines.push(`\n共 ${S.recs.length} 筆，個體總數 ${total}`);
+  document.getElementById('copyArea').textContent=lines.join('\n');
+  document.getElementById('copyModal').classList.add('on');
+}
+function closeCopyModal(){document.getElementById('copyModal').classList.remove('on');}
+function doCopy(){
+  const text=document.getElementById('copyArea').textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>toast('✓ 已複製到剪貼簿','ok')).catch(()=>legacyCopy(text));
+  else legacyCopy(text);
+}
+function legacyCopy(text){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('✓ 已複製到剪貼簿','ok');}catch(e){toast('⚠ 請手動長按選取文字複製','warn');}
+  document.body.removeChild(ta);
+}
+
+function clearAll(){
+  if(!confirm('確定清除所有紀錄與打點？此動作不可復原，請確認已匯出資料。')) return;
+  S.recs=[];S.pts=[];S.nextPtNum=1;pendingPt=null;
+  save();render();updStats();updProgress();
+  ['b','s'].forEach(ctx=>{ptMarkers[ctx].forEach(m=>m.remove());ptMarkers[ctx]=[];});
+  document.getElementById('pinInfoCard').classList.remove('on');
+  document.getElementById('ptListWrap').style.display='none';
+  renderPtList();
+  toast('已清除所有紀錄','ok');
+}
+
+/* ════════════════════════════════════════════
+   Storage
+════════════════════════════════════════════ */
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify({recs:S.recs,pts:S.pts,nextPtNum:S.nextPtNum}));}catch(e){}}
+
+/* ════════════════════════════════════════════
+   Toast
+════════════════════════════════════════════ */
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast'+(type?' '+type:'');
+  el.classList.add('on');clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('on'),2300);
+}
+
+/* ════════════════════════════════════════════
+   Google Sheets Sync
+════════════════════════════════════════════ */
+const GS_KEY='koulhu_gs_url';
+const GS_SYNCED_KEY='koulhu_gs_synced';
+function gsUrl(){return localStorage.getItem(GS_KEY)||'';}
+function syncedIds(){try{return new Set(JSON.parse(localStorage.getItem(GS_SYNCED_KEY)||'[]'));}catch(e){return new Set();}}
+function markSynced(ids){const ex=syncedIds();ids.forEach(id=>ex.add(id));localStorage.setItem(GS_SYNCED_KEY,JSON.stringify([...ex]));}
+function toggleGsPanel(){const body=document.getElementById('gsBody');body.style.display=body.style.display==='none'?'block':'none';}
+
+function linkSheet(){
+  const url=document.getElementById('gsUrlInput').value.trim();
+  if(!url||!url.includes('script.google.com')){toast('⚠ 請貼上正確的 Apps Script URL','warn');return;}
+  addSyncLog('正在測試連線…');showProg('連線測試中…');
+  const cbName='_gsPingCb_'+Date.now();let timer;
+  window[cbName]=function(d){
+    clearTimeout(timer);const el=document.getElementById('_gsScript');if(el)el.remove();delete window[cbName];
+    hideProg();
+    if(d&&d.status==='ok'){localStorage.setItem(GS_KEY,url);applyLinkedState(url);addSyncLog('✓ 連線成功！');toast('✓ 已連結','ok');}
+    else{addSyncLog('✗ 伺服器回應異常');toast('連線失敗','err');}
+  };
+  timer=setTimeout(()=>{const el=document.getElementById('_gsScript');if(el)el.remove();if(window[cbName])delete window[cbName];hideProg();addSyncLog('✗ 連線逾時');toast('連線逾時','err');},15000);
+  const script=document.createElement('script');script.id='_gsScript';script.src=url+'?action=ping&callback='+cbName;
+  script.onerror=()=>{clearTimeout(timer);if(window[cbName])delete window[cbName];hideProg();addSyncLog('✗ Script 載入失敗');toast('連線失敗','err');};
+  document.head.appendChild(script);
+}
+function unlinkSheet(){if(!confirm('確定取消連結？'))return;localStorage.removeItem(GS_KEY);applyLinkedState('');toast('已取消連結','ok');}
+function applyLinkedState(url){
+  const banner=document.getElementById('gsBanner'),badge=document.getElementById('gsStatusBadge');
+  if(url){banner.classList.add('linked');badge.textContent='已連結';badge.className='gstatus ok';document.getElementById('gs-linked').style.display='block';document.getElementById('gs-unlinked').style.display='none';document.getElementById('btnSync').disabled=false;document.getElementById('gsUrlDisplay').textContent=url.length>60?url.substring(0,60)+'…':url;}
+  else{banner.classList.remove('linked');badge.textContent='未連結';badge.className='gstatus no';document.getElementById('gs-linked').style.display='none';document.getElementById('gs-unlinked').style.display='block';document.getElementById('btnSync').disabled=true;}
+}
+function showProg(txt){document.getElementById('syncProgTxt').textContent=txt;document.getElementById('syncProg').classList.add('on');}
+function hideProg(){document.getElementById('syncProg').classList.remove('on');}
+function addSyncLog(msg){const el=document.getElementById('syncLog');el.classList.add('on');el.innerHTML+=msg+'<br>';el.scrollTop=el.scrollHeight;}
+
+async function syncAll(){
+  const url=gsUrl();if(!url){toast('⚠ 尚未連結','warn');return;}
+  const synced=syncedIds();
+  const newRecs=S.recs.filter(r=>!synced.has('b_'+r.id));
+  if(!newRecs.length){toast('✓ 所有資料已同步','ok');return;}
+  document.getElementById('btnSync').disabled=true;
+  document.getElementById('syncLog').innerHTML='';
+  addSyncLog(`開始同步：鳥種 ${newRecs.length} 筆`);showProg('同步中…');
+  // row 欄位 [0-21]：sync_id,案場編號,年,月,日,穿越線,點位,X,Y,物種,數量,行為,微棲地,備註,備註_物種,備註_行為,備註_微棲地,調查者,開始時間,結束時間,時間(觀察→U欄),滿潮時間
+  const rows=newRecs.map(r=>[String(r.id),r.案場編號||'',r.年,r.月,r.日,r.穿越線區域,r.點位編號,r.X_TWD97TM2,r.Y_TWD97TM2,r.物種,r.數量,r.行為,r.微棲地||'',r.備註||'',r.備註_物種||'',r.備註_行為||'',r.備註_微棲地||'',r.調查者||'',r.開始時間||'',r.結束時間||'',r.時間||'',r.滿潮時間||'']);
+  try{
+    await fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'append',bird:rows})});
+    markSynced(newRecs.map(r=>'b_'+r.id));
+    hideProg();addSyncLog(`✓ 已送出：鳥種 ${newRecs.length} 筆`);toast('✓ 已送出同步！','ok');
+  }catch(err){hideProg();addSyncLog('✗ 送出失敗：'+err.message);toast('同步失敗','err');}
+  document.getElementById('btnSync').disabled=false;
+}
+function initGS(){const url=gsUrl();if(url){applyLinkedState(url);document.getElementById('gsBody').style.display='block';}}
+
+/* ════════════════════════════════════════════
+   Start
+════════════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
