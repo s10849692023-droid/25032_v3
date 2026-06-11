@@ -1314,6 +1314,8 @@ function deletePt(ptNum){
   if(hasRec){toast('⚠ 此打點已有鳥種紀錄，請先刪除紀錄再刪打點','warn');return;}
   if(!confirm(`確定刪除打點 #${ptNum}（${pt.lineName}）？`))return;
   S.pts=S.pts.filter(p=>p.ptNum!==ptNum);
+  // 刪除後重算流水號，下一個打點接續現存最大號
+  S.nextPtNum=S.pts.length?Math.max(...S.pts.map(p=>p.ptNum))+1:1;
   if(pendingPt&&pendingPt.ptNum===ptNum){
     pendingPt=S.pts.length?S.pts[S.pts.length-1]:null;
     if(pendingPt){
