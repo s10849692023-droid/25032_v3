@@ -1228,8 +1228,15 @@ function renderMapPts(ctx){
     // 有鳥種記錄 → 普通 circleMarker（不可拖曳）
     // 無鳥種記錄 → 可拖曳的 marker（用 DivIcon 模擬圓點）
     if(hasRec){
+      const recCount=S.recs.filter(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName).length;
       const m=L.circleMarker([pt.lat,pt.lng],{radius:isPending?10:7,color:'#fff',weight:2,fillColor:color,fillOpacity:.92}).addTo(maps[ctx]);
-      m.bindPopup(`<b style="color:#7c3aed">${pt.lineName} ＃${pt.ptNum}</b><br><small>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}</small><br>🦅 ${sps}`);
+      m.bindPopup(`<b style="color:#7c3aed">${pt.lineName} ＃${pt.ptNum}</b><br>
+        <small>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}</small><br>
+        🦅 ${sps}（${recCount} 筆）<br>
+        ${ctx==='b'?`<button onclick="setPending(${pt.ptNum});this.closest('.leaflet-popup').querySelector('.leaflet-popup-close-button').click()" style="margin-top:4px;padding:3px 8px;border-radius:4px;border:1px solid #c4b5fd;background:#f5f3ff;color:#7c3aed;font-size:11px;cursor:pointer;font-weight:700">▶ 切換為當前點位</button>`:''}
+      `);
+      // 點擊 marker 直接切換為當前點位（方便快速回到舊點補記）
+      if(ctx==='b') m.on('click',()=>setPending(pt.ptNum));
       ptMarkers[ctx].push(m);
     } else {
       // 無記錄的點 → 可拖曳，拖曳結束後更新座標
@@ -1282,18 +1289,27 @@ function renderPtList(){
   wrap.style.display='block';
   badge.textContent=`(${S.pts.length})`;
   list.innerHTML=[...S.pts].reverse().map(pt=>{
-    const hasRec=S.recs.some(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const recs=S.recs.filter(r=>r.點位編號===pt.ptNum&&r.穿越線區域===pt.lineName);
+    const hasRec=recs.length>0;
     const isPending=pendingPt&&pendingPt.ptNum===pt.ptNum;
-    const recLabel=hasRec?`<span style="color:var(--green);font-size:10px">🦅 有紀錄</span>`:`<span style="color:var(--dim);font-size:10px">未記錄</span>`;
-    const srcLabel=pt.source==='map'?'🖱':'📍';
+    const recLabel=hasRec
+      ?`<span style="color:var(--green);font-size:10px;font-weight:700">🦅 ${recs.length} 筆紀錄</span>`
+      :`<span style="color:var(--dim);font-size:10px">未記錄</span>`;
+    const srcLabel=pt.source==='map'?'🖱':'📡';
+    // 「設為當前」：所有點（含有紀錄的）都可切換，方便補記
+    const actionBtn=isPending
+      ?'<span style="font-size:10px;color:var(--purple);font-weight:700;white-space:nowrap">▶ 當前</span>'
+      :`<button class="pt-set-pending" onclick="setPending(${pt.ptNum})" title="切換為當前點位，可補記鳥種">切換</button>`;
+    const delBtn=!hasRec
+      ?`<button class="pt-del" onclick="deletePt(${pt.ptNum})" title="刪除打點">✕</button>`
+      :'';
     return `<div class="pt-item${isPending?' pending':''}">
       <span class="pt-num">#${pt.ptNum}</span>
       <div style="flex:1;min-width:0">
         <div class="pt-line">${srcLabel} ${pt.lineName} &nbsp;${recLabel}</div>
         <div class="pt-coord">${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)} &nbsp;${pt.time}</div>
       </div>
-      ${!isPending?`<button class="pt-set-pending" onclick="setPending(${pt.ptNum})">設為當前</button>`:'<span style="font-size:10px;color:var(--purple);font-weight:700">▶ 當前</span>'}
-      ${!hasRec?`<button class="pt-del" onclick="deletePt(${pt.ptNum})" title="刪除打點">✕</button>`:''}
+      ${actionBtn}${delBtn}
     </div>`;
   }).join('');
 }
@@ -1335,6 +1351,13 @@ function setPending(ptNum){
   const pt=S.pts.find(p=>p.ptNum===ptNum);
   if(!pt) return;
   pendingPt=pt;
+  // 同步更新手動選線按鈕
+  S.selectedLine=pt.lineName;
+  document.querySelectorAll('#lineSelectorBtns .lbtn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.line===pt.lineName);
+    b.classList.remove('nearest');
+  });
+  // 更新資訊卡
   document.getElementById('piLine').textContent=pt.lineName;
   document.getElementById('piPtNum').textContent=String(pt.ptNum);
   document.getElementById('piCoord').textContent=`WGS84: ${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}`;
@@ -1342,7 +1365,13 @@ function setPending(ptNum){
   document.getElementById('pinInfoCard').classList.add('on');
   renderMapPts('b'); renderPtList();
   if(maps['b']) maps['b'].setView([pt.lat,pt.lng],17);
-  toast(`✓ 已切換到打點 #${ptNum}`,'info');
+  // 捲動到填表區，方便直接補記
+  setTimeout(()=>{
+    const el=document.querySelector('.card .ch');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  },150);
+  const recs=S.recs.filter(r=>r.點位編號===ptNum&&r.穿越線區域===pt.lineName);
+  toast(`✓ 已切換到 #${ptNum}（${pt.lineName}）${recs.length?'，已有 '+recs.length+' 筆，可繼續補記':''}` ,'info');
 }
 
 function updateMyLoc(ctx,lat,lng){
